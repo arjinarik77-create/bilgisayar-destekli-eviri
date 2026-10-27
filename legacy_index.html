@@ -1468,9 +1468,12 @@
                             <div class="relative w-full aspect-video bg-black flex items-center justify-center overflow-hidden border-b border-slate-300 dark:border-neutral-800 shadow-inner">
                                 <video id="avtVideoPlayer" class="w-full h-full object-contain" controls playsinline style="aspect-ratio: 16/9; max-height: 100%;"></video>
                                 <!-- Canlı Sinema Altyazı Önizleme Katmanı (Subtitle Overlay) -->
-                                <div id="avtSubtitleOverlay"
-                                    class="absolute bottom-6 left-4 right-4 text-center pointer-events-none select-none px-3 py-1.5 transition-all z-10 font-bold max-w-full break-words"
-                                    style="font-family: Arial, sans-serif; font-size: 24px; color: #ffeb3b; background-color: rgba(0,0,0,0.75); border-radius: 4px; display: inline-block;">
+                                <div id="avtSubtitleOverlayContainer" class="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none select-none z-20 px-4">
+                                    <div id="avtSubtitleOverlay"
+                                        class="text-center font-bold px-3 py-1.5 transition-all max-w-[90%] break-words shadow-lg rounded"
+                                        style="font-family: Arial, sans-serif; font-size: 20px; color: #ffeb3b; background-color: rgba(0,0,0,0.78); text-shadow: 0 2px 4px rgba(0,0,0,0.9); line-height: 1.35; display: inline-block;">
+                                    </div>
+                                    <span id="subVideoOverlayCaption" class="hidden" aria-hidden="true"></span>
                                 </div>
                             </div>
                             <!-- Sade Alt Durum Şeridi (Temaya Duyarlı) -->
@@ -5439,7 +5442,7 @@ Yüzünde tatlı bir tebessümle yarınki sunum için hazırlıklarını tamamla
 
         // Videonun anlık oynatılan saniyesini doğrudan Başla veya Bitir kutusuna ata
         function setTimestampFromCurrentVideo(segId, type) {
-            const player = document.getElementById('subVideoPlayer');
+            const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
             const curSec = (player && Number.isFinite(player.currentTime)) ? player.currentTime : 0;
             const formatted = formatSecondsToSrtTimestamp(curSec);
             const inputId = type === 'start' ? `subStartTime-${segId}` : `subEndTime-${segId}`;
@@ -6628,7 +6631,7 @@ Yüzünde tatlı bir tebessümle yarınki sunum için hazırlıklarını tamamla
                 }
 
                 // Video Oynatıcı Durumunu Koru (Kullanıcı Talebi: Projeye tekrar girince video kapanmasın)
-                const player = document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer');
+                const player = document.getElementById('avtVideoPlayer') || (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                 const placeholder = document.getElementById('subVideoPlaceholderArea');
                 const playerArea = document.getElementById('subVideoPlayerArea');
                 const existingVideoUrl = (proj.videoUrl || (proj.videoFile ? URL.createObjectURL(proj.videoFile) : null) || (currentLoadedVideoFile ? URL.createObjectURL(currentLoadedVideoFile) : null));
@@ -6774,6 +6777,51 @@ Yüzünde tatlı bir tebessümle yarınki sunum için hazırlıklarını tamamla
         // ========================================================
         // 4.1 CANLI SİNEMA ALTYAZI ÖNİZLEME MONİTÖRÜ
         // ========================================================
+        
+        // CANLI VİDEO ALTYAZI KATMANI GÜNCELLEYİCİ
+        function updateLiveSubtitleOnVideo(text, seg) {
+            const overlay = document.getElementById('avtSubtitleOverlay') || document.getElementById('subVideoOverlayCaption');
+            const container = document.getElementById('avtSubtitleOverlayContainer');
+            if (!overlay) return;
+
+            let cleanText = (typeof text === 'string') ? text : '';
+            if (!cleanText && seg) {
+                cleanText = (seg.target && seg.target.trim().length > 0) ? seg.target : (seg.source || '');
+            }
+
+            const isTop = (seg && seg.placement === 'top') || (cleanText && cleanText.includes('{\\an8}'));
+            if (cleanText) {
+                cleanText = cleanText.replace(/\{\\an\d\}/g, '').trim();
+            }
+
+            if (container) {
+                if (isTop) {
+                    container.style.top = '16px';
+                    container.style.bottom = 'auto';
+                } else {
+                    container.style.top = 'auto';
+                    container.style.bottom = '24px';
+                }
+            }
+
+            if (!cleanText) {
+                overlay.innerHTML = '';
+                overlay.style.display = 'none';
+                if (container) container.style.display = 'none';
+                return;
+            }
+
+            overlay.innerHTML = typeof sanitizeSubtitleHtml === 'function' ? sanitizeSubtitleHtml(cleanText) : escapeHtml(cleanText).replace(/\n/g, '<br>');
+            overlay.style.display = 'inline-block';
+            if (container) container.style.display = 'flex';
+        }
+
+        window.updateCinemaSubtitleOverlay = function(seg) {
+            if (!seg) return;
+            const text = (seg.target && seg.target.trim().length > 0) ? seg.target : seg.source;
+            updateLiveSubtitleOnVideo(text, seg);
+        };
+
         function updateCinemaSubtitleMonitor(segOrId) {
             let seg = segOrId;
             if (typeof segOrId === 'number' || typeof segOrId === 'string') {
@@ -6805,6 +6853,8 @@ Yüzünde tatlı bir tebessümle yarınki sunum için hazırlıklarını tamamla
                 // Altyazıda satır sonlarını ve güvenli HTML etiketlerini (i, b, font vb.) işle
                 textEl.innerHTML = sanitizeSubtitleHtml(displayText);
             }
+            // Canlı video üzerindeki katmana da yansıt
+            updateLiveSubtitleOnVideo(displayText, seg);
 
             const metrics = calculateSubtitleMetrics(displayText, dur);
             if (cpsBadge) {
@@ -8476,11 +8526,17 @@ Yüzünde tatlı bir tebessümle yarınki sunum için hazırlıklarını tamamla
             if (isSub) {
                 updateSubtitleLiveMetrics(segId, el.value);
                 updateCinemaSubtitleMonitor(seg);
-                const overlayCaption = document.getElementById('subVideoOverlayCaption');
-                if (overlayCaption && (appState.activeSubtitleSegmentId === segId || !appState.activeSubtitleSegmentId)) {
-                    const subLines = getSubtitleLines(el.value, 42);
-                    const formatted = subLines.line2 ? `${sanitizeSubtitleHtml(subLines.line1)}<br>${sanitizeSubtitleHtml(subLines.line2)}` : sanitizeSubtitleHtml(subLines.line1);
-                    overlayCaption.innerHTML = formatted;
+                // Canlı çeviriyi video üzeri katmana anında bas:
+                const displayText = (el.value && el.value.trim().length > 0) ? el.value : (seg.source || '');
+                updateLiveSubtitleOnVideo(displayText, seg);
+
+                // Video duraklatılmışsa oynatıcıyı bu segmentin başlangıcına taşı
+                const player = document.getElementById('avtVideoPlayer') || (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
+                if (player && player.paused && seg && seg.startTime) {
+                    const startSec = parseSrtTimestampToSeconds(seg.startTime);
+                    if (Number.isFinite(startSec) && Math.abs(player.currentTime - startSec) > 0.8) {
+                        try { player.currentTime = startSec; } catch (e) {}
+                    }
                 }
             }
 
@@ -9692,7 +9748,7 @@ ${styleGuidePromptSection}`
 
         function applySubtitleStyles() {
             const s = appState.subtitleStyles;
-            const overlay = document.getElementById('subVideoOverlayCaption');
+            const overlay = document.getElementById('avtSubtitleOverlay') || document.getElementById('subVideoOverlayCaption');
             const monitor = document.getElementById('subMonitorLiveText');
 
             if (overlay) {
@@ -13929,7 +13985,7 @@ th { background-color: #f1f5f9; color: #334155; font-size: 12px; padding: 10px; 
                 // Eğer video yüklenmişse video oynatıcıyı aktifleştir ve videoyu yükle
                 if (videoToMount) {
                     setTimeout(() => {
-                        const player = document.getElementById('subVideoPlayer');
+                        const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                         const placeholder = document.getElementById('subVideoPlaceholderArea');
                         const playerArea = document.getElementById('subVideoPlayerArea');
                         const videoPanel = document.getElementById('subVideoPanel');
@@ -14124,7 +14180,7 @@ th { background-color: #f1f5f9; color: #334155; font-size: 12px; padding: 10px; 
                 return;
             }
 
-            const player = document.getElementById('subVideoPlayer');
+            const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
             if (!player || !player.src) {
                 showToast("⚠️ Lütfen önce bir video dosyası yükleyin.");
                 return;
@@ -14219,7 +14275,7 @@ th { background-color: #f1f5f9; color: #334155; font-size: 12px; padding: 10px; 
             }
             updateWebSpeechUI(false);
 
-            const player = document.getElementById('subVideoPlayer');
+            const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
             if (player && !player.paused) {
                 player.pause();
             }
@@ -14311,7 +14367,7 @@ th { background-color: #f1f5f9; color: #334155; font-size: 12px; padding: 10px; 
             closeVideoTranscriptionModal();
 
             if (currentTranscribeMethod === 'webspeech') {
-                const player = document.getElementById('subVideoPlayer');
+                const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                 if (player) {
                     player.currentTime = 0;
                 }
@@ -14638,7 +14694,7 @@ KESİN KURALLAR:
 
                     // B: VAD Konuşma Enerjisi Aralıkları (Demo metinler kaldırıldı!)
                     if (!preparedSegments || preparedSegments.length === 0) {
-                        const playerEl = document.getElementById('subVideoPlayer');
+                        const playerEl = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                         let totalDur = 60;
                         if (audioBuffer && Number.isFinite(audioBuffer.duration) && audioBuffer.duration > 0) {
                             totalDur = audioBuffer.duration;
@@ -14708,7 +14764,7 @@ KESİN KURALLAR:
                     // İlk segmentte videoyu ilk zamana konumlandır
                     if (i === 0) {
                         try {
-                            const player = document.getElementById('subVideoPlayer');
+                            const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                             if (player) {
                                 seekSubVideo(item.startTime, item);
                             }
@@ -14780,7 +14836,7 @@ KESİN KURALLAR:
 
             if (typeof collapseSidebarForSubtitling === 'function') collapseSidebarForSubtitling();
 
-            const player = document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer');
+            const player = document.getElementById('avtVideoPlayer') || (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
             const placeholder = document.getElementById('subVideoPlaceholderArea');
             const playerArea = document.getElementById('subVideoPlayerArea');
             const videoPanel = document.getElementById('subVideoPanel');
@@ -14907,7 +14963,7 @@ KESİN KURALLAR:
             // Eğer video dosyası varsa video oynatıcıya bağla
             const file = currentLoadedVideoFile || currentTranscribeVideoFile;
             if (file) {
-                const player = document.getElementById('subVideoPlayer');
+                const player = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                 const placeholder = document.getElementById('subVideoPlaceholderArea');
                 const playerArea = document.getElementById('subVideoPlayerArea');
                 if (player && !player.src) {
@@ -14924,17 +14980,16 @@ KESİN KURALLAR:
         }
 
         function seekSubVideo(startStr, seg) {
-            const player = document.getElementById('subVideoPlayer');
+            const player = document.getElementById('avtVideoPlayer') || (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
             const timeDisplay = document.getElementById('subVideoTimecodeDisplay');
             const activeSegDisplay = document.getElementById('subVideoActiveSegDisplay');
-            const overlayCaption = document.getElementById('subVideoOverlayCaption');
 
             const sec = parseSrtTimestampToSeconds(startStr);
             if (player && Number.isFinite(sec)) {
                 try {
                     player.currentTime = sec;
                 } catch (e) {
-                    // fMP4 ve canlı kayıtlarda henüz buffer yüklenmemişse hata vermesini engelle
+                    // Buffer koruma
                 }
             }
 
@@ -14947,10 +15002,8 @@ KESİN KURALLAR:
                 if (activeSegDisplay) {
                     activeSegDisplay.innerText = `Aktif Segment #${seg.id}: ${startStr}`;
                 }
-                if (overlayCaption) {
-                    const text = (seg.target && seg.target.trim().length > 0) ? seg.target.trim() : seg.source;
-                    overlayCaption.innerHTML = sanitizeSubtitleHtml(text);
-                }
+                const text = (seg.target && seg.target.trim().length > 0) ? seg.target.trim() : (seg.source || '');
+                updateLiveSubtitleOnVideo(text, seg);
                 updateCinemaSubtitleMonitor(seg);
             }
         }
@@ -14969,25 +15022,25 @@ KESİN KURALLAR:
             }
 
             const proj = getActiveProject();
-            if (proj && proj.type === 'subtitling') {
+            if ((proj && proj.type === 'subtitling') || (proj && proj.wasSubtitling) || seg.startTime !== undefined) {
                 seekSubVideo(seg.startTime || '00:00:00,000', seg);
+                const text = (seg.target && seg.target.trim().length > 0) ? seg.target.trim() : (seg.source || '');
+                updateLiveSubtitleOnVideo(text, seg);
             }
         }
 
         function initSubVideoEventListeners() {
-            const player = document.getElementById('subVideoPlayer');
+            const player = document.getElementById('avtVideoPlayer') || (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
             if (!player || player._hasCatListeners) return;
             player._hasCatListeners = true;
 
-            // Oynatma ve serbest sarma dinleyicisi: Segment kutularını ASLA kilitlemez
-            player.addEventListener('timeupdate', () => {
+            const onVideoPlaybackSync = () => {
                 const curSec = player.currentTime;
                 const timeDisplay = document.getElementById('subVideoTimecodeDisplay');
                 if (timeDisplay) {
                     timeDisplay.innerText = `Süre: ${formatSecondsToMinSec(curSec)} (${curSec.toFixed(1)}s)`;
                 }
 
-                // Oynatılan saniyeye denk gelen segmenti bul ve video üzeri katmana yansıt
                 const doc = getActiveDoc();
                 if (doc && doc.segments) {
                     const matchingSeg = doc.segments.find(s => {
@@ -14996,31 +15049,22 @@ KESİN KURALLAR:
                         return curSec >= sSec && curSec <= eSec;
                     });
 
-                    const overlayCaption = document.getElementById('subVideoOverlayCaption');
-                    if (overlayCaption) {
-                        if (matchingSeg) {
-                            const isTop = (matchingSeg.placement === 'top') || (matchingSeg.target && matchingSeg.target.includes('{\\an8}')) || (matchingSeg.source && matchingSeg.source.includes('{\\an8}'));
-                            if (isTop) {
-                                overlayCaption.style.top = '14px';
-                                overlayCaption.style.bottom = 'auto';
-                            } else {
-                                overlayCaption.style.top = 'auto';
-                                overlayCaption.style.bottom = '36px';
-                            }
-                            let text = (matchingSeg.target && matchingSeg.target.trim().length > 0)
-                                ? matchingSeg.target.trim()
-                                : matchingSeg.source;
-                            text = text.replace(/\{\\an\d\}/g, '').trim();
-                            overlayCaption.innerHTML = sanitizeSubtitleHtml(text);
-                        } else {
-                            overlayCaption.innerHTML = '';
+                    if (matchingSeg) {
+                        const activeSegDisplay = document.getElementById('subVideoActiveSegDisplay');
+                        if (activeSegDisplay) {
+                            activeSegDisplay.innerText = `Segment #${matchingSeg.id}: ${matchingSeg.startTime} - ${matchingSeg.endTime}`;
                         }
-                    }
-                    if (window.CatAVT && CatAVT.Waveform && typeof CatAVT.Waveform.render === 'function') {
-                        CatAVT.Waveform.render();
+                        const text = (matchingSeg.target && matchingSeg.target.trim().length > 0) ? matchingSeg.target.trim() : (matchingSeg.source || '');
+                        updateLiveSubtitleOnVideo(text, matchingSeg);
+                    } else {
+                        // Segmentler arası sessizlikte video üzerindeki altyazıyı gizle
+                        updateLiveSubtitleOnVideo('', null);
                     }
                 }
-            });
+            };
+
+            player.addEventListener('timeupdate', onVideoPlaybackSync);
+            player.addEventListener('seeked', onVideoPlaybackSync);
         }
 
         // ========================================================
