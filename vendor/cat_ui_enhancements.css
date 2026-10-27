@@ -1,0 +1,617 @@
+/* ==========================================================
+   1. GELENEKSEL PROFESYONEL KOYU TEMA (SLATE / ANTRASİT DARK)
+   Kural: "dark temayı düzenle sadece siyah beyaz değil geleneksel dark temaya benzet"
+   ========================================================== */
+
+/* Temel Gövde ve Sayfa Kökü */
+html[data-theme="dark"],
+html.dark,
+html[data-theme="dark"] body,
+html.dark body {
+    background: #0f172a !important;
+    background-color: #0f172a !important;
+    background-image: none !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] *,
+html.dark * {
+    border-color: #334155 !important;
+}
+
+/* Tüm Sayfa ve Bölüm Konteynerleri (Geleneksel Koyu Yüzeyler) */
+html[data-theme="dark"] main,
+html.dark main,
+html[data-theme="dark"] aside,
+html.dark aside,
+html[data-theme="dark"] header,
+html.dark header,
+html[data-theme="dark"] footer,
+html.dark footer,
+html[data-theme="dark"] nav,
+html.dark nav,
+html[data-theme="dark"] #section-editor,
+html.dark #section-editor,
+html[data-theme="dark"] #section-tm,
+html.dark #section-tm,
+html[data-theme="dark"] #section-projects,
+html.dark #section-projects,
+html[data-theme="dark"] #section-glossary,
+html.dark #section-glossary,
+html[data-theme="dark"] #section-settings,
+html.dark #section-settings,
+html[data-theme="dark"] #segmentsContainer,
+html.dark #segmentsContainer,
+html[data-theme="dark"] #editorContentArea,
+html.dark #editorContentArea,
+html[data-theme="dark"] .fluent-topbar,
+html.dark .fluent-topbar,
+html[data-theme="dark"] .fluent-sidebar,
+html.dark .fluent-sidebar,
+html[data-theme="dark"] #toolbarOverflowRow,
+html.dark #toolbarOverflowRow,
+html[data-theme="dark"] #subVideoCollapsedBanner,
+html.dark #subVideoCollapsedBanner,
+html[data-theme="dark"] #subtitlingWorkbench,
+html.dark #subtitlingWorkbench,
+html[data-theme="dark"] #interpretingWorkbench,
+html.dark #interpretingWorkbench,
+html[data-theme="dark"] #subVideoPanel,
+html.dark #subVideoPanel {
+    background: #111827 !important;
+    background-color: #111827 !important;
+    background-image: none !important;
+    color: #f1f5f9 !important;
+    border-color: #1f2937 !important;
+}
+
+/* Kartlar, Segmentler, Paneller ve Kutular (Geleneksel Slate-800 Yüzey) */
+html[data-theme="dark"] .fluent-card,
+html.dark .fluent-card,
+html[data-theme="dark"] .segment-row,
+html.dark .segment-row,
+html[data-theme="dark"] [id^="segCard-"],
+html.dark [id^="segCard-"],
+html[data-theme="dark"] .bg-white,
+html.dark .bg-white,
+html[data-theme="dark"] [class*="bg-white"],
+html.dark [class*="bg-white"] {
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+    background-image: none !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+
+html[data-theme="dark"] [class*="bg-slate-50"],
+html.dark [class*="bg-slate-50"],
+html[data-theme="dark"] [class*="bg-slate-100"],
+html.dark [class*="bg-slate-100"] {
+    background-color: #151e2e !important;
+    color: #cbd5e1 !important;
+}
+
+/* Aktif Segment Vurgusu */
+html[data-theme="dark"] .segment-row.active,
+html.dark .segment-row.active,
+html[data-theme="dark"] .fluent-card-active,
+html.dark .fluent-card-active,
+html[data-theme="dark"] [id^="segCard-"].fluent-card-active,
+html.dark [id^="segCard-"].fluent-card-active {
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Geleneksel Dark Tipografi */
+html[data-theme="dark"] h1, html.dark h1,
+html[data-theme="dark"] h2, html.dark h2,
+html[data-theme="dark"] h3, html.dark h3,
+html[data-theme="dark"] h4, html.dark h4,
+html[data-theme="dark"] h5, html.dark h5,
+html[data-theme="dark"] h6, html.dark h6 {
+    color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] p, html.dark p,
+html[data-theme="dark"] span:not(.badge):not(.pill), html.dark span:not(.badge):not(.pill),
+html[data-theme="dark"] label, html.dark label {
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .text-slate-400, html.dark .text-slate-400,
+html[data-theme="dark"] .text-slate-500, html.dark .text-slate-500,
+html[data-theme="dark"] .text-slate-600, html.dark .text-slate-600 {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* Giriş Elemanları */
+html[data-theme="dark"] textarea,
+html.dark textarea,
+html[data-theme="dark"] input,
+html.dark input,
+html[data-theme="dark"] select,
+html.dark select,
+html[data-theme="dark"] .fluent-input,
+html.dark .fluent-input {
+    background-color: #0b0f19 !important;
+    background: #0b0f19 !important;
+    color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc !important;
+    border-color: #334155 !important;
+    caret-color: #38bdf8 !important;
+}
+
+html[data-theme="dark"] textarea:focus,
+html.dark textarea:focus,
+html[data-theme="dark"] input:focus,
+html.dark input:focus,
+html[data-theme="dark"] select:focus,
+html.dark select:focus {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3) !important;
+}
+
+html[data-theme="dark"] ::placeholder,
+html.dark ::placeholder {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+}
+
+/* Butonlar ve Navigasyon */
+html[data-theme="dark"] button,
+html.dark button,
+html[data-theme="dark"] .fluent-btn,
+html.dark .fluent-btn,
+html[data-theme="dark"] .fluent-nav-item,
+html.dark .fluent-nav-item {
+    background-color: #1e293b !important;
+    background: #1e293b !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+
+html[data-theme="dark"] button:hover,
+html.dark button:hover,
+html[data-theme="dark"] .fluent-btn:hover,
+html.dark .fluent-btn:hover,
+html[data-theme="dark"] .fluent-nav-item:hover,
+html.dark .fluent-nav-item:hover {
+    background-color: #334155 !important;
+    background: #334155 !important;
+    border-color: #475569 !important;
+}
+
+html[data-theme="dark"] .fluent-btn-primary,
+html.dark .fluent-btn-primary {
+    background-color: #0284c7 !important;
+    background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #0369a1 !important;
+}
+
+html[data-theme="dark"] .fluent-nav-item.active,
+html.dark .fluent-nav-item.active {
+    background-color: #1e3a5f !important;
+    background: #1e3a5f !important;
+    color: #38bdf8 !important;
+    -webkit-text-fill-color: #38bdf8 !important;
+    border-left: 3.5px solid #38bdf8 !important;
+}
+
+/* ==========================================================
+   2. AYDINLIK TEMA: KIRIK BUZ MAVİSİ (BROKEN ICE BLUE GRADIENT)
+   Kural: "light temada ise broken ice blue gradyan ekle yukarıdan aşağıa azalacak şekilde"
+   ========================================================== */
+html[data-theme="light"],
+html.light,
+html:not(.dark) {
+    background: linear-gradient(180deg, #bae6fd 0%, #dbeafe 12%, #eff6ff 28%, #f8fafc 65%, #ffffff 100%) !important;
+    background-attachment: fixed !important;
+}
+
+html[data-theme="light"] body,
+html.light body,
+body:not(.dark) {
+    background: linear-gradient(180deg, #bae6fd 0%, #dbeafe 12%, #eff6ff 28%, #f8fafc 65%, #ffffff 100%) !important;
+    background-attachment: fixed !important;
+}
+
+html[data-theme="light"] .fluent-topbar,
+html.light .fluent-topbar,
+.fluent-topbar {
+    background: rgba(219, 234, 254, 0.88) !important;
+    backdrop-filter: blur(24px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
+    border-bottom: 1px solid rgba(147, 197, 253, 0.6) !important;
+}
+
+html[data-theme="light"] .fluent-sidebar,
+html.light .fluent-sidebar,
+.fluent-sidebar {
+    background: rgba(240, 249, 255, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(186, 230, 253, 0.6) !important;
+}
+
+/* ==========================================================
+   5. İKONLAR (BEMBEYAZ & PARLAK)
+   ========================================================== */
+html[data-theme="dark"] .material-symbols-outlined,
+html.dark .material-symbols-outlined,
+html[data-theme="dark"] svg,
+html.dark svg,
+html[data-theme="dark"] .lucide,
+html.dark .lucide {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    fill: currentColor;
+}
+
+/* ==========================================================
+   6. ÇEVİRİ BELLEĞİ (TM) ÖNERİ KUTUSU VE GÖRSEL FARK (DIFF)
+   ========================================================== */
+html[data-theme="dark"] .tm-suggestion-box,
+html.dark .tm-suggestion-box {
+    background: #080808 !important;
+    background-color: #080808 !important;
+    background-image: none !important;
+    border: 1px solid #0d9488 !important;
+    border-left: 4px solid #0d9488 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] ins,
+html.dark ins {
+    background: #064e3b !important;
+    color: #a7f3d0 !important;
+    -webkit-text-fill-color: #a7f3d0 !important;
+    text-decoration: none !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+}
+
+html[data-theme="dark"] del,
+html.dark del {
+    background: #881337 !important;
+    color: #fecdd3 !important;
+    -webkit-text-fill-color: #fecdd3 !important;
+    text-decoration: line-through !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+}
+
+/* ==========================================================
+   7. AKILLI BİÇİMLENDİRME KALKANI (FORMAT SHIELD)
+   ========================================================== */
+html[data-theme="dark"] .fs-block,
+html.dark .fs-block {
+    background: #080808 !important;
+    border: 1px solid #262626 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .fs-chip,
+html.dark .fs-chip {
+    background: #141414 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: var(--fs-c, #38bdf8) !important;
+}
+
+html[data-theme="dark"] .fs-tool,
+html.dark .fs-tool {
+    background: #141414 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+html[data-theme="dark"] .fs-preview,
+html.dark .fs-preview {
+    background: #050505 !important;
+    border: 1px dashed #333333 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .fs-qa,
+html.dark .fs-qa {
+    background: #111111 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .fs-dialog,
+html.dark .fs-dialog {
+    background: #080808 !important;
+    border: 1px solid #262626 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .fs-issue,
+html.dark .fs-issue {
+    background: #111111 !important;
+    border-color: #262626 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .fs-issue select,
+html.dark .fs-issue select {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+html[data-theme="dark"] .fs-btn,
+html.dark .fs-btn {
+    background: #141414 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* ==========================================================
+   8. MODALLAR VE DİYALOGLAR (HER ŞEY SİYAH & BEYAZ YAZI)
+   ========================================================== */
+html[data-theme="dark"] .modal-overlay,
+html.dark .modal-overlay,
+html[data-theme="dark"] [id^="modal"],
+html.dark [id^="modal"],
+html[data-theme="dark"] #modalQAReportBackdrop,
+html.dark #modalQAReportBackdrop {
+    background: rgba(0, 0, 0, 0.88) !important;
+    background-color: rgba(0, 0, 0, 0.88) !important;
+}
+
+html[data-theme="dark"] [id^="modal"] .fluent-card,
+html.dark [id^="modal"] .fluent-card,
+html[data-theme="dark"] [id^="modal"] .bg-white,
+html.dark [id^="modal"] .bg-white,
+html[data-theme="dark"] #modalQAReportBackdrop > div,
+html.dark #modalQAReportBackdrop > div {
+    background: #080808 !important;
+    background-color: #080808 !important;
+    background-image: none !important;
+    border-color: #262626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95) !important;
+}
+
+/* ==========================================================
+   9. CANLI BELGE ÖNİZLEME (LIVE PREVIEW DRAWER)
+   ========================================================== */
+#livePreviewDrawer {
+    position: fixed;
+    top: 56px;
+    right: -520px;
+    width: 520px;
+    height: calc(100vh - 56px);
+    background: #ffffff;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
+    z-index: 99980;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #e2e8f0;
+}
+
+#livePreviewDrawer.drawer-open {
+    right: 0;
+}
+
+.preview-sheet {
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 32px 36px;
+    min-height: 500px;
+    font-family: 'Times New Roman', serif;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #1e293b;
+}
+
+html[data-theme="dark"] #livePreviewDrawer,
+html.dark #livePreviewDrawer {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    border-left-color: #222222 !important;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.9) !important;
+}
+
+html[data-theme="dark"] .preview-sheet,
+html.dark .preview-sheet {
+    background: #080808 !important;
+    background-color: #080808 !important;
+    border-color: #262626 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Kısayol Rozetleri */
+.cat-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="dark"] .cat-kbd,
+html.dark .cat-kbd {
+    background: #141414 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* ==========================================================
+   10. SCROLLBARS (KAYDIRMA ÇUBUĞU SİYAH ZEMİN)
+   ========================================================== */
+html[data-theme="dark"] ::-webkit-scrollbar-track,
+html.dark ::-webkit-scrollbar-track {
+    background: #000000 !important;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb,
+html.dark ::-webkit-scrollbar-thumb {
+    background: #333333 !important;
+    border-radius: 99px !important;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #555555 !important;
+}
+
+/* ==========================================================
+   11. SEPIA / KİTAP MODU (GÖZ YORMAYAN SICAK TONLAR)
+   ========================================================== */
+html[data-theme="sepia"] body {
+    background-color: #fbf7ee !important;
+    color: #433422 !important;
+}
+
+html[data-theme="sepia"] .fluent-card,
+html[data-theme="sepia"] .bg-white {
+    background-color: #f4ecd8 !important;
+    border-color: #e6dac3 !important;
+    color: #382c1e !important;
+}
+
+html[data-theme="sepia"] header,
+html[data-theme="sepia"] aside {
+    background-color: #eee3cb !important;
+    border-color: #decfae !important;
+}
+
+html[data-theme="sepia"] textarea.fluent-input {
+    background-color: #fdfbf7 !important;
+    color: #2b2116 !important;
+    border-color: #d8c6a5 !important;
+}
+
+/* ==========================================================
+   12. BELİRGİN SEGMENT ÇİZGİLERİ VE KUTUCUK SINIRLARI
+   ========================================================== */
+#segmentsContainer {
+    border-top: 1px solid #cbd5e1;
+}
+html.dark #segmentsContainer,
+html[data-theme="dark"] #segmentsContainer {
+    border-top: 1px solid #333333 !important;
+}
+
+/* Her segment satırının alt çizgisi */
+.cat-segment-row {
+    border-bottom: 1.5px solid #cbd5e1 !important;
+}
+html.dark .cat-segment-row,
+html[data-theme="dark"] .cat-segment-row {
+    border-bottom: 1.5px solid #383838 !important;
+}
+
+/* Kolon Ayrım Çizgileri */
+.cat-segment-col-num {
+    border-right: 1px solid #e2e8f0;
+}
+html.dark .cat-segment-col-num,
+html[data-theme="dark"] .cat-segment-col-num {
+    border-right: 1px solid #282828 !important;
+}
+
+.cat-segment-col-source {
+    border-right: 1.5px solid #cbd5e1 !important;
+}
+html.dark .cat-segment-col-source,
+html[data-theme="dark"] .cat-segment-col-source {
+    border-right: 1.5px solid #383838 !important;
+}
+
+.cat-segment-col-check {
+    border-left: 1px solid #e2e8f0;
+}
+html.dark .cat-segment-col-check,
+html[data-theme="dark"] .cat-segment-col-check {
+    border-left: 1px solid #282828 !important;
+}
+
+/* Belirgin Kaynak Kutusu */
+.cat-source-box {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background-color: #f8fafc !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.dark .cat-source-box,
+html[data-theme="dark"] .cat-source-box {
+    border: 1.5px solid #383838 !important;
+    background-color: #0c0c0c !important;
+}
+
+/* Belirgin Hedef Metin Kutusu (Textarea) */
+.cat-target-textarea {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+html.dark .cat-target-textarea,
+html[data-theme="dark"] .cat-target-textarea {
+    border: 1.5px solid #404040 !important;
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+.cat-target-textarea:hover {
+    border-color: #94a3b8 !important;
+}
+html.dark .cat-target-textarea:hover,
+html[data-theme="dark"] .cat-target-textarea:hover {
+    border-color: #555555 !important;
+}
+.cat-target-textarea:focus {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.22) !important;
+    background-color: #ffffff !important;
+}
+html.dark .cat-target-textarea:focus,
+html[data-theme="dark"] .cat-target-textarea:focus {
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.35) !important;
+    background-color: #161616 !important;
+}
+
+/* Onay Kutucuğu */
+.cat-confirm-checkbox {
+    border: 2px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+}
+html.dark .cat-confirm-checkbox,
+html[data-theme="dark"] .cat-confirm-checkbox {
+    border: 2px solid #484848 !important;
+}
+.cat-confirm-checkbox:hover {
+    border-color: #94a3b8 !important;
+}
+html.dark .cat-confirm-checkbox:hover,
+html[data-theme="dark"] .cat-confirm-checkbox:hover {
+    border-color: #666666 !important;
+}
+

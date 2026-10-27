@@ -1,0 +1,262 @@
+// Builder for Onboarding Wizard and Admin Dashboard
+const fs = require('fs');
+
+console.log("Building Onboarding Wizard and Admin Panel for AuraCAT...");
+
+const code = `
+<!-- ======================================================== -->
+<!-- AŞAMA 0 & 4 AŞAMALI KAYIT SİHİRBAZI MODALI (ONBOARDING WIZARD) -->
+<!-- ======================================================== -->
+<div id="onboardingWizardModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="w-full max-w-2xl flex flex-col rounded-2xl glass-modal-dark shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200" id="wizardCard">
+        
+        <!-- Sihirbaz Üst Barı -->
+        <div class="p-4 px-6 border-b border-white/10 flex items-center justify-between bg-black/30">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-cobalt/20 text-cobalt-light border border-cobalt/30 flex items-center justify-center shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-100 tracking-tight" id="wizardMainTitle">AuraCAT Kayıt ve Yetkilendirme</h3>
+                    <p class="text-[11px] font-mono text-slate-400" id="wizardSubtitle">Rolünüze uygun çalışma alanı yapılandırması</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeOnboardingWizard()" class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 4 Adımlı İlerleme Göstergesi (Rol seçilince görünür) -->
+        <div id="wizardStepIndicatorBar" class="hidden px-6 py-2.5 bg-black/40 border-b border-white/5">
+            <div class="flex items-center justify-between font-mono text-[11px]">
+                <div class="flex items-center gap-2" id="stepIndicator-1">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-cobalt text-white">01</span>
+                    <span class="text-slate-300 font-semibold" id="stepLabel-1">Kimlik</span>
+                </div>
+                <div class="h-px w-8 bg-white/10"></div>
+                <div class="flex items-center gap-2 opacity-50" id="stepIndicator-2">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/10 text-slate-400">02</span>
+                    <span class="text-slate-400" id="stepLabel-2">Yetkinlik</span>
+                </div>
+                <div class="h-px w-8 bg-white/10"></div>
+                <div class="flex items-center gap-2 opacity-50" id="stepIndicator-3">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/10 text-slate-400">03</span>
+                    <span class="text-slate-400" id="stepLabel-3">Uzmanlık</span>
+                </div>
+                <div class="h-px w-8 bg-white/10"></div>
+                <div class="flex items-center gap-2 opacity-50" id="stepIndicator-4">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/10 text-slate-400">04</span>
+                    <span class="text-slate-400" id="stepLabel-4">Güvenlik</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sihirbaz Dinamik İçerik Alanı -->
+        <div class="p-6 overflow-y-auto max-h-[65vh] select-none text-xs" id="wizardContentContainer">
+            <!-- JavaScript ile doldurulur: Aşama 0 Rol Seçimi veya Rol Ekranları 1-4 -->
+        </div>
+
+        <!-- Sihirbaz Alt Gezinme Butonları -->
+        <div class="p-4 px-6 border-t border-white/10 flex items-center justify-between bg-black/30" id="wizardFooterBar">
+            <button type="button" id="wizardBtnBack" onclick="handleWizardBack()" class="px-3.5 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors cursor-pointer hidden">
+                ← Geri
+            </button>
+            <div class="flex items-center gap-2 ml-auto">
+                <button type="button" onclick="closeOnboardingWizard()" class="px-4 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+                    Kapat
+                </button>
+                <button type="button" id="wizardBtnNext" onclick="handleWizardNext()" class="px-5 py-1.5 rounded-md bg-cobalt hover:bg-cobalt-hover text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hidden">
+                    <span id="wizardBtnNextText">Devam Et</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- YÖNETİCİ PANELİ (ADMIN DASHBOARD & REALTIME MONITORING MODAL) -->
+<!-- ======================================================== -->
+<div id="adminPanelModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md">
+    <div class="w-full max-w-6xl max-h-[94vh] flex flex-col rounded-2xl glass-modal-dark shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200" id="adminCard">
+        
+        <!-- Yönetici Paneli Üst Barı -->
+        <div class="p-4 px-6 border-b border-white/10 flex items-center justify-between bg-black/40">
+            <div class="flex items-center gap-3.5">
+                <div class="w-9 h-9 rounded-lg bg-emerald/20 text-emerald border border-emerald/30 flex items-center justify-center shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm sm:text-base font-bold text-slate-100 tracking-tight">AuraCAT Yönetici Paneli</h3>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-subtle text-emerald border border-emerald/30 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse"></span>
+                            <span>Supabase Realtime: Canlı</span>
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">Kullanıcı Rol Başvuruları & Yetkilendirme Denetimi</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="resetDatabaseDemo()" class="px-2.5 py-1.5 rounded-md text-[11px] font-mono text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-white/10 transition-colors cursor-pointer" title="Örnek verileri sıfırla">
+                    Verileri Sıfırla
+                </button>
+                <button type="button" onclick="closeAdminPanel()" class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- İstatistik Metrikleri (4 Kart) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 px-6 border-b border-white/10 bg-black/20 text-xs">
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+                <span class="text-slate-400 text-[11px] font-mono">Toplam Başvuru</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-lg font-bold text-slate-100 font-mono" id="adminStatTotal">4</span>
+                    <span class="text-[10px] text-emerald font-mono">Aktif</span>
+                </div>
+            </div>
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+                <span class="text-slate-400 text-[11px] font-mono">Onaylanan Hesaplar</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-lg font-bold text-emerald font-mono" id="adminStatApproved">2</span>
+                    <span class="text-[10px] text-emerald font-mono">Yetkili</span>
+                </div>
+            </div>
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+                <span class="text-slate-400 text-[11px] font-mono">Onay Bekleyenler</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-lg font-bold text-amber font-mono" id="adminStatPending">2</span>
+                    <span class="text-[10px] text-amber font-mono">İncelemede</span>
+                </div>
+            </div>
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+                <span class="text-slate-400 text-[11px] font-mono">Kurumsal Ağ</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-lg font-bold text-cobalt-light font-mono" id="adminStatAgency">1 Büro + 1 Üniv.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtre Çubuğu: Rol Seçimi ve Arama -->
+        <div class="px-6 py-3 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/10 text-xs select-none">
+            <!-- Rol Filtre Sekmeleri -->
+            <div class="flex items-center gap-1 p-0.5 rounded-lg bg-black/40 border border-white/10 overflow-x-auto">
+                <button type="button" onclick="setAdminRoleFilter('all')" id="adminFilter-all" class="px-3 py-1 rounded-md font-mono text-[11px] font-bold bg-white/10 text-white cursor-pointer transition-colors">
+                    Tümü (<span id="count-all">4</span>)
+                </button>
+                <button type="button" onclick="setAdminRoleFilter('translator')" id="adminFilter-translator" class="px-3 py-1 rounded-md font-mono text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer transition-colors">
+                    Tercüman (<span id="count-translator">1</span>)
+                </button>
+                <button type="button" onclick="setAdminRoleFilter('student')" id="adminFilter-student" class="px-3 py-1 rounded-md font-mono text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer transition-colors">
+                    Öğrenci (<span id="count-student">1</span>)
+                </button>
+                <button type="button" onclick="setAdminRoleFilter('academic')" id="adminFilter-academic" class="px-3 py-1 rounded-md font-mono text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer transition-colors">
+                    Akademisyen (<span id="count-academic">1</span>)
+                </button>
+                <button type="button" onclick="setAdminRoleFilter('agency')" id="adminFilter-agency" class="px-3 py-1 rounded-md font-mono text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer transition-colors">
+                    Çeviri Bürosu (<span id="count-agency">1</span>)
+                </button>
+            </div>
+
+            <!-- Tablo Arama Kutusu -->
+            <div class="relative w-full sm:w-64">
+                <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-500">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21L16.65 16.65"/>
+                    </svg>
+                </div>
+                <input type="text" id="adminSearchInput" oninput="renderAdminTable()" placeholder="İsim, e-posta veya kurum ara..."
+                    class="w-full h-7 pl-8 pr-3 text-[11px] rounded-md bg-black/30 border border-white/10 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cobalt-light font-sans">
+            </div>
+        </div>
+
+        <!-- Başvuru Tablosu (Realtime Data Table) -->
+        <div class="flex-1 overflow-y-auto min-h-[320px]">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-white/10 bg-black/30 text-[10px] font-mono uppercase text-slate-400 tracking-wider select-none sticky top-0">
+                        <th class="p-3 pl-6 w-14">Rol</th>
+                        <th class="p-3">Ad Soyad / Kurum</th>
+                        <th class="p-3">E-posta & Kimlik</th>
+                        <th class="p-3">Dil Çifti</th>
+                        <th class="p-3">Uzmanlık Alanı</th>
+                        <th class="p-3">Tarih</th>
+                        <th class="p-3 text-center">Durum</th>
+                        <th class="p-3 pr-6 text-right">Aksiyonlar</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 font-sans text-slate-300" id="adminTableBody">
+                    <!-- JavaScript ile dinamik render edilir -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Yönetici Paneli Alt Barı -->
+        <div class="p-3 px-6 border-t border-white/10 flex items-center justify-between bg-black/40 text-[11px] font-mono text-slate-400">
+            <div>
+                <span>Aktif Tablo: </span>
+                <span class="text-slate-200 font-semibold" id="adminTableFooterInfo">4 Kayıt Gösteriliyor</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeAdminPanel()" class="px-4 py-1 rounded-md text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer">
+                    Kapat
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Profil Detay İnceleme Modalı (Admin Drawer/Modal) -->
+<div id="adminDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="w-full max-w-lg rounded-2xl glass-modal-dark border border-white/10 p-6 space-y-4 shadow-2xl text-xs" id="adminDetailCard">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <h4 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Başvuru Dosyası Detayı</span>
+            </h4>
+            <button type="button" onclick="closeAdminDetailModal()" class="text-slate-400 hover:text-slate-200">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div id="adminDetailContent" class="space-y-3 font-mono">
+            <!-- Dinamik doldurulur -->
+        </div>
+        <div class="pt-3 border-t border-white/10 flex justify-end gap-2" id="adminDetailActions">
+            <!-- Aksiyon butonları -->
+        </div>
+    </div>
+</div>
+`;
+
+console.log("Onboarding and Admin HTML compiled successfully.");
+fs.writeFileSync('scratch/onboarding_and_admin.html', code, 'utf8');

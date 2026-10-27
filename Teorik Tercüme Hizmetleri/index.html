@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arık Studio | İnteraktif 3D Küresel Dil Hizmetleri & Anında Fiyat Hesaplama</title>
+  <meta name="description"
+    content="Dünya çapında 5 ana dilde profesyonel yeminli tercüme, medikal, hukuki ve yapay zeka destekli lokalizasyon çözümleri. Sayfa ve karakter bazlı anında fiyat teklifi al.">
+
+  <!-- Fontlar, Three.js, ThreeGlobe & TopoJSON / D3.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/three-globe"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #000000;
+      --card-bg: #080808;
+      --accent-blue: #38bdf8;
+      --accent-cyan: #00f0ff;
+      --accent-purple: #818cf8;
+      --accent-emerald: #34d399;
+      --text-white: #ffffff;
+      --text-muted: #ffffff;
+      --glass-bg: #0a0a0a;
+      --glass-border: #222222;
+      --glass-glow: rgba(56, 189, 248, 0.18);
+      --nav-bg: #000000;
+      --input-bg: #050505;
+      --badge-bg: #141414;
+    }
+
+    [data-theme="light"] {
+      --bg-dark: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --accent-blue: #2563eb;
+      --accent-cyan: #0284c7;
+      --accent-purple: #6366f1;
+      --accent-emerald: #059669;
+      --text-white: #0f172a;
+      --text-muted: #64748b;
+      --glass-bg: rgba(0, 0, 0, 0.03);
+      --glass-border: rgba(0, 0, 0, 0.12);
+      --glass-glow: rgba(37, 99, 235, 0.1);
+      --nav-bg: rgba(255, 255, 255, 0.9);
+      --input-bg: #ffffff;
+      --badge-bg: rgba(37, 99, 235, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .theme-toggle-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-white);
+      padding: 0.5rem 0.8rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent-cyan);
+      transform: scale(1.05);
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Arka plan ışık kütleleri */
+    .bg-glow-1 {
+      position: fixed;
+      top: -15vw;
+      left: -15vw;
+      width: 55vw;
+      height: 55vw;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.14) 0%, rgba(5, 8, 17, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow-2 {
+      position: fixed;
+      bottom: -15vw;
+      right: -15vw;
+      width: 55vw;
+      height: 55vw;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(5, 8, 17, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Navbar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.4rem 8%;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 100;
+      background: rgba(5, 8, 17, 0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-white);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .logo span {
+      color: var(--accent-cyan);
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: var(--text-white);
+    }
+
+    .contact-btn {
+      padding: 0.6rem 1.3rem;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(56, 189, 248, 0.25));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 10px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .contact-btn:hover {
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Hero Intro Section */
+    .hero-intro {
+      padding: 9.5rem 8% 3.5rem 8%;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 1.2rem;
+      background: rgba(37, 99, 235, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      color: var(--accent-cyan);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 25px rgba(37, 99, 235, 0.25);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-cyan);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+      }
+    }
+
+    h1 {
+      font-size: 3.6rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 1.2rem;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+
+    .scroll-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--accent-cyan);
+      font-size: 0.9rem;
+      font-weight: 600;
+      animation: bounce 2s infinite;
+      cursor: pointer;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      20%,
+      50%,
+      80%,
+      100% {
+        transform: translateY(0);
+      }
+
+      40% {
+        transform: translateY(-8px);
+      }
+
+      60% {
+        transform: translateY(-4px);
+      }
+    }
+
+    /* Scroll Interactive Container */
+    .interactive-experience {
+      position: relative;
+      display: flex;
+      min-height: 500vh;
+    }
+
+    /* Sticky Left 3D Globe Viewport */
+    .globe-sticky-wrapper {
+      position: sticky;
+      top: 0;
+      width: 55%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      cursor: grab;
+    }
+
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    /* Floating Country Indicator Badge on Globe */
+    .globe-overlay-badge {
+      position: absolute;
+      top: 12%;
+      left: 8%;
+      background: rgba(13, 19, 36, 0.92);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      padding: 0.9rem 1.5rem;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.25);
+      z-index: 20;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .flag-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .badge-info h4 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-white);
+    }
+
+    .badge-info p {
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* Stepper Bar */
+    .country-stepper {
+      position: absolute;
+      bottom: 8%;
+      left: 8%;
+      display: flex;
+      gap: 0.6rem;
+      z-index: 20;
+    }
+
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid var(--glass-border);
+      transition: all 0.4s;
+      cursor: pointer;
+    }
+
+    .step-dot.active {
+      width: 36px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+      box-shadow: 0 0 15px var(--accent-cyan);
+    }
+
+    /* Right Side Scroll Content (Cards) */
+    .scroll-cards-wrapper {
+      width: 45%;
+      padding: 10vh 4% 20vh 0;
+      z-index: 20;
+    }
+
+    .country-card {
+      min-height: 72vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 6vh;
+      opacity: 0.2;
+      transform: translateY(40px) scale(0.94);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .country-card.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .card-box {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      padding: 2.3rem;
+      border-radius: 26px;
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 35px var(--glass-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--card-accent-color, linear-gradient(180deg, var(--accent-cyan), var(--accent-blue)));
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+    }
+
+    .country-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .card-flag {
+      font-size: 2.5rem;
+      line-height: 1;
+    }
+
+    .card-title h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-white);
+    }
+
+    .card-title p {
+      font-size: 0.85rem;
+      color: var(--card-theme-color, var(--accent-cyan));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.08);
+    }
+
+    .translation-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      background: rgba(5, 8, 17, 0.75);
+      padding: 1.1rem;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 1.3rem;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .meta-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .meta-value {
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .translation-description {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      line-height: 1.65;
+      margin-bottom: 1.6rem;
+    }
+
+    .method-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .method-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.9rem;
+      color: var(--text-white);
+    }
+
+    .method-item svg {
+      width: 17px;
+      height: 17px;
+      color: var(--card-theme-color, var(--accent-cyan));
+      flex-shrink: 0;
+    }
+
+    /* Advanced Instant Price Calculator Section */
+    .calc-section {
+      padding: 6rem 8%;
+      max-width: 950px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 20;
+    }
+
+    .quote-widget {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      padding: 2.8rem;
+      border-radius: 28px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.65), 0 0 50px var(--glass-glow);
+    }
+
+    .widget-title-area {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .widget-title-area h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-white);
+      margin-bottom: 0.4rem;
+    }
+
+    .widget-title-area p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Calculator Input Controls */
+    .input-mode-tabs {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+      background: rgba(5, 8, 17, 0.7);
+      padding: 0.4rem;
+      border-radius: 14px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.8rem 1.2rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: white;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .widget-row {
+      display: flex;
+      gap: 1.2rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .swap-lang-btn {
+      align-self: flex-end;
+      margin-bottom: 0.2rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .swap-lang-btn:hover {
+      background: var(--accent-blue);
+      color: white;
+      transform: rotate(180deg);
+    }
+
+    .field-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .field-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      padding: 0.95rem 1.1rem;
+      background: rgba(5, 8, 17, 0.92);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      color: var(--text-white);
+      outline: none;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Page Count Input Special Box */
+    .page-input-card {
+      background: rgba(5, 8, 17, 0.7);
+      border: 1px solid var(--glass-border);
+      padding: 1.6rem;
+      border-radius: 18px;
+      margin-bottom: 1.4rem;
+    }
+
+    .page-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-top: 0.6rem;
+    }
+
+    .page-num-input {
+      font-size: 1.6rem;
+      font-weight: 800;
+      text-align: center;
+      width: 120px;
+      color: var(--accent-cyan);
+    }
+
+    .page-info-note {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* File Upload Box */
+    .file-upload-box {
+      border: 2px dashed var(--glass-border);
+      border-radius: 16px;
+      padding: 2.2rem 1.5rem;
+      text-align: center;
+      background: rgba(5, 8, 17, 0.5);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-upload-box:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.04);
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--accent-cyan);
+      margin-bottom: 0.8rem;
+    }
+
+    /* Character Counter Bar */
+    .char-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      background: rgba(5, 8, 17, 0.8);
+      padding: 0.9rem 1.2rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 1.4rem;
+      font-size: 0.85rem;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    .stat-item strong {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    /* Estimated Price Display Box */
+    .price-display-box {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(56, 189, 248, 0.12));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 1.6rem;
+      border-radius: 20px;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .price-range-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .price-range-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text-white);
+      margin-bottom: 0.4rem;
+    }
+
+    .price-range-value span {
+      color: var(--accent-cyan);
+    }
+
+    .price-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .cta-order-btn {
+      width: 100%;
+      padding: 1.2rem;
+      background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-weight: 800;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+    }
+
+    .cta-order-btn:hover {
+      background: linear-gradient(135deg, #3b82f6, var(--accent-blue));
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.55);
+      transform: translateY(-2px);
+    }
+
+    /* Modal Form Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(5, 8, 17, 0.85);
+      backdrop-filter: blur(15px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      width: 90%;
+      max-width: 580px;
+      padding: 2.5rem;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 50px var(--glass-glow);
+      position: relative;
+      transform: translateY(30px) scale(0.95);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 1.4rem;
+      right: 1.4rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-title-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title-group h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-white);
+      margin-bottom: 0.3rem;
+    }
+
+    .modal-title-group p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .modal-summary-box {
+      background: rgba(5, 8, 17, 0.8);
+      border: 1px solid var(--glass-border);
+      padding: 1rem 1.2rem;
+      border-radius: 14px;
+      margin-bottom: 1.4rem;
+      font-size: 0.85rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    .modal-summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .modal-summary-item span {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .modal-summary-item strong {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .reassurance-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1rem;
+      border-radius: 12px;
+      border-left: 3px solid var(--accent-cyan);
+      line-height: 1.5;
+      margin-top: 0.4rem;
+    }
+
+    .success-banner {
+      display: none;
+      background: rgba(52, 211, 153, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: var(--accent-emerald);
+      padding: 1.2rem;
+      border-radius: 14px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .interactive-experience {
+        flex-direction: column;
+        min-height: auto;
+      }
+
+      .globe-sticky-wrapper {
+        position: relative;
+        width: 100%;
+        height: 55vh;
+      }
+
+      .scroll-cards-wrapper {
+        width: 100%;
+        padding: 2rem 5%;
+      }
+
+      .country-card {
+        min-height: auto;
+        opacity: 1;
+        transform: none;
+        margin-bottom: 2rem;
+      }
+
+      .widget-row {
+        flex-direction: column;
+      }
+
+      .swap-lang-btn {
+        align-self: center;
+        transform: rotate(90deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <header>
+    <a href="#" class="logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </div>
+      Teorik<span>Tercüme</span>
+    </a>
+    <nav style="display: flex; align-items: center; gap: 1.2rem;">
+      <a href="#hizmetler">Küresel Diller</a>
+      <a href="#hesapla">Fiyat Hesapla</a>
+      <a href="#surec">Çeviri Süreci</a>
+      <a href="#iletisim" class="contact-btn">Bize Ulaşın</a>
+      <a href="../landing.html" style="background: rgba(255,255,255,0.08); color: #f1f5f9; border: 1px solid rgba(255,255,255,0.15); padding: 0.5rem 0.9rem; border-radius: 9999px; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span>Vitrin</span>
+      </a>
+      <a href="../index.html" style="background: linear-gradient(135deg, #2563eb, #38bdf8); color: white; padding: 0.5rem 1rem; border-radius: 9999px; text-decoration: none; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 4px 14px rgba(37,99,235,0.35);">
+        <span>CAT Editörü</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTeorikTheme()" title="Aydınlık / Koyu Tema">
+        <span id="themeToggleIcon">🌙</span>
+        <span id="themeToggleText">Koyu</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Hero Başlık -->
+  <section class="hero-intro">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      3D Dünya Haritası: Mavi Kıyı Şeritleri & Ayrık Beyaz Noktalar
+    </div>
+    <h1>Küresel Ağımızla <span>Tüm Dünya Dillerindeyiz.</span></h1>
+    <p class="subtitle">Aşağı kaydırarak gerçek 3D dünya haritası üzerindeki mavi kıyı şeritlerini, ayrık beyaz karaları
+      ve 6 ana dil merkezimizi keşfedin.</p>
+    <div class="scroll-hint" onclick="scrollToInteractive()">
+      <span>Keşfetmek için kaydırın</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
+      </svg>
+    </div>
+  </section>
+
+  <!-- Scroll Etkileşimli 3D Alanı -->
+  <section class="interactive-experience" id="hizmetler">
+
+    <!-- Sticky Left 3D Küre Alanı -->
+    <div class="globe-sticky-wrapper">
+      <div id="canvas-container">
+        <!-- Floating Active Country Badge -->
+        <div class="globe-overlay-badge" id="activeBadge">
+          <span class="flag-icon" id="badgeFlag">🇹🇷</span>
+          <div class="badge-info">
+            <h4 id="badgeCountry">Türkiye</h4>
+            <p id="badgeLang" style="color: #00f0ff;">Türkçe • Ana Merkez</p>
+          </div>
+        </div>
+
+        <!-- Stepper Dots -->
+        <div class="country-stepper">
+          <div class="step-dot active" onclick="scrollToCard(0)"></div>
+          <div class="step-dot" onclick="scrollToCard(1)"></div>
+          <div class="step-dot" onclick="scrollToCard(2)"></div>
+          <div class="step-dot" onclick="scrollToCard(3)"></div>
+          <div class="step-dot" onclick="scrollToCard(4)"></div>
+          <div class="step-dot" onclick="scrollToCard(5)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sağ Taraf Scroll Kartları -->
+    <div class="scroll-cards-wrapper">
+
+      <!-- 1. Türkiye / Türkçe -->
+      <div class="country-card active" data-index="0"
+        style="--card-theme-color: #00f0ff; --card-accent-color: linear-gradient(180deg, #00f0ff, #2563eb);">
+        <div class="card-box">
+          <div class="card-header">
+            <div class="country-title-group">
+              <span class="card-flag">🇹🇷</span>
+              <div class="card-title">
+                <h3>Türkiye</h3>
+                <p>Türkçe Çeviri Çözümleri</p>
+              </div>
+            </div>
+            <div class="card-number">01</div>
+          </div>
+          <div class="translation-meta">
+            <div class="meta-item">
+              <span class="meta-label">Uzmanlık Alanı</span>
+              <span class="meta-value">Yeminli & Noter Onaylı</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Ortalama Teslimat</span>
+              <span class="meta-value">4 - 12 Saat</span>
+            </div>
+          </div>
+          <p class="translation-description">
+            Türkiye merkezli noter yeminli mütercim tercüman kadromuz ile resmi evraklar, hukuki sözleşmeler ve kurumsal
+            belgelerde %100 resmi kabul garantili çeviri sunuyoruz.
+          </p>
+          <ul class="method-list">
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Noter ve Apostil tasdik süreçleri takibi
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Hukuk & Finans alanında akademik terminoloji kontrolü
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Islak imzalı kargo veya dijital güvenli teslimat
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 2. İngiltere & ABD / İngilizce -->
+      <div class="country-card" data-index="1"
+        style="--card-theme-color: #3b82f6; --card-accent-color: linear-gradient(180deg, #3b82f6, #1d4ed8);">
+        <div class="card-box">
+          <div class="card-header">
+            <div class="country-title-group">
+              <span class="card-flag">🇬🇧</span>
+              <div class="card-title">
+                <h3>İngiltere / ABD</h3>
+                <p>İngilizce Global Çözümler</p>
+              </div>
+            </div>
+            <div class="card-number">02</div>
+          </div>
+          <div class="translation-meta">
+            <div class="meta-item">
+              <span class="meta-label">Uzmanlık Alanı</span>
+              <span class="meta-value">Küresel İş & Yapay Zeka</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Ortalama Teslimat</span>
+              <span class="meta-value">2 - 8 Saat</span>
+            </div>
+          </div>
+          <p class="translation-description">
+            Uluslararası ticaret ve yazılım sektörünün ana dili İngilizce için Yapay Zeka destekli hızlı taslak üretimi
+            ve Native (Anadili İngilizce) kıdemli editör kontrolü (Neural MT + Post-Editing).
+          </p>
+          <ul class="method-list">
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Amerikan ve İngiliz İngilizcesi (US/UK) stil adaptasyonu
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Yazılım, SaaS ve e-ticaret siteleri için kod içi lokalizasyon
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              İleri düzey LLM ve TM (Çeviri Belleği) entegrasyonu
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3. Almanya / Almanca -->
+      <div class="country-card" data-index="2"
+        style="--card-theme-color: #eab308; --card-accent-color: linear-gradient(180deg, #eab308, #ca8a04);">
+        <div class="card-box">
+          <div class="card-header">
+            <div class="country-title-group">
+              <span class="card-flag">🇩🇪</span>
+              <div class="card-title">
+                <h3>Almanya</h3>
+                <p>Almanca Teknik & Medikal</p>
+              </div>
+            </div>
+            <div class="card-number">03</div>
+          </div>
+          <div class="translation-meta">
+            <div class="meta-item">
+              <span class="meta-label">Uzmanlık Alanı</span>
+              <span class="meta-value">DIN EN ISO 17100 Standart</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Ortalama Teslimat</span>
+              <span class="meta-value">24 Saat</span>
+            </div>
+          </div>
+          <p class="translation-description">
+            Alman mühendislik disiplini ve tıbbi/medikal mevzuatlarına tam uygunluk. Patent metinleri, otomotiv
+            kılavuzları ve klinik araştırmalarda sıfır hata toleranslı akademik çeviri.
+          </p>
+          <ul class="method-list">
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Mühendis ve doktor unvanlı uzman çevirmen kadrosu
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Almanya mahkemeleri ve konsoloslukları kabul garantisi
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              DIN standartlarında terminoloji yönetimi ve sözlük denetimi
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4. Fransa / Fransızca -->
+      <div class="country-card" data-index="3"
+        style="--card-theme-color: #ec4899; --card-accent-color: linear-gradient(180deg, #ec4899, #db2777);">
+        <div class="card-box">
+          <div class="card-header">
+            <div class="country-title-group">
+              <span class="card-flag">🇫🇷</span>
+              <div class="card-title">
+                <h3>Fransa</h3>
+                <p>Fransızca Diplomasi & Hukuk</p>
+              </div>
+            </div>
+            <div class="card-number">04</div>
+          </div>
+          <div class="translation-meta">
+            <div class="meta-item">
+              <span class="meta-label">Uzmanlık Alanı</span>
+              <span class="meta-value">AB Direktifleri & Diplomasi</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Ortalama Teslimat</span>
+              <span class="meta-value">24 - 48 Saat</span>
+            </div>
+          </div>
+          <p class="translation-description">
+            Fransız kültürünün ve Avrupa Birliği normlarının gerektirdiği diplomatik nezaket ve edebi/hukuki üslup
+            adaptasyonu. Paris ve Brüksel standartlarına tam uyum.
+          </p>
+          <ul class="method-list">
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Fransa ve Afrika Frangı bölgesi diyalekt uyumlaması
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              AB Müstesebatı ve diplomatik yazışma formatları
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Lüks tüketim, moda ve kozmetik sektörü lokalizasyonu
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 5. İspanya / İspanyolca -->
+      <div class="country-card" data-index="4"
+        style="--card-theme-color: #f97316; --card-accent-color: linear-gradient(180deg, #f97316, #ea580c);">
+        <div class="card-box">
+          <div class="card-header">
+            <div class="country-title-group">
+              <span class="card-flag">🇪🇸</span>
+              <div class="card-title">
+                <h3>İspanya</h3>
+                <p>İspanyolca & Latin Amerika</p>
+              </div>
+            </div>
+            <div class="card-number">05</div>
+          </div>
+          <div class="translation-meta">
+            <div class="meta-item">
+              <span class="meta-label">Uzmanlık Alanı</span>
+              <span class="meta-value">Pazarlama & E-Ticaret</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Ortalama Teslimat</span>
+              <span class="meta-value">12 - 24 Saat</span>
+            </div>
+          </div>
+          <p class="translation-description">
+            500 milyondan fazla nüfusun konuştuğu İspanyolca için İspanya (Castilian) ve Latin Amerika diyalekt ayrımı
+            gözeterek hedef kitleye özel transkreasyon (yaratıcı çeviri).
+          </p>
+          <ul class="method-list">
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Meksika, Arjantin ve İspanya bölgesel terminoloji yönetimi
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Dijital pazarlama kampanyaları ve içerik transkreasyonu
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Turizm, otelcilik ve gastronomi sektörü çevirileri
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 6. Rusya / Rusça -->
+      <div class="country-card" data-index="5"
+        style="--card-theme-color: #10b981; --card-accent-color: linear-gradient(180deg, #10b981, #059669);">
+        <div class="card-box">
+          <div class="card-header">
+            <div class="country-title-group">
+              <span class="card-flag">🇷🇺</span>
+              <div class="card-title">
+                <h3>Rusya</h3>
+                <p>Rusça Avrasya Mevzuatı</p>
+              </div>
+            </div>
+            <div class="card-number">06</div>
+          </div>
+          <div class="translation-meta">
+            <div class="meta-item">
+              <span class="meta-label">Uzmanlık Alanı</span>
+              <span class="meta-value">Ticaret & Gümrük Evrakları</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Ortalama Teslimat</span>
+              <span class="meta-value">24 Saat</span>
+            </div>
+          </div>
+          <p class="translation-description">
+            Kiril alfabesi ve Avrasya Ekonomik Topluluğu (EAEU) gümrük beyannameleri, ticari sözleşmeler, enerji sektörü
+            projeleri ve makine şartnameleri çevirisi.
+          </p>
+          <ul class="method-list">
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Gümrük, lojistik ve uluslararası deniz ticareti evrakları
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Rusça teknik terimler kılavuzu ve şablon kontrolü
+            </li>
+            <li class="method-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              B2B ticari yazışma ve distribütörlük anlaşmaları
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Gelişmiş Sayfa Bazlı Tahmini Fiyat Hesaplama Modülü -->
+  <section class="calc-section" id="hesapla">
+    <div class="quote-widget">
+      <div class="widget-title-area">
+        <h2>Anında Tahmini Fiyat Hesaplama</h2>
+        <p>Sayfa sayısı ve uzmanlık alanınıza özel indirimli fiyat aralığı (1 Standart Sayfa = 1.000 Boşluklu Karakter)
+        </p>
+      </div>
+
+      <!-- Dil Seçimi (Kaynak ve Hedef Dil) -->
+      <div class="widget-row">
+        <div class="field-group">
+          <label class="field-label" for="srcLang">Kaynak Dil</label>
+          <select id="srcLang" onchange="calculateQuote()">
+            <option value="en" selected>İngilizce 🇬🇧</option>
+            <option value="fr">Fransızca 🇫🇷</option>
+            <option value="es">İspanyolca 🇪🇸</option>
+            <option value="ru">Rusça 🇷🇺</option>
+            <option value="tr">Türkçe 🇹🇷</option>
+          </select>
+        </div>
+
+        <button class="swap-lang-btn" onclick="swapLanguages()" title="Dilleri Değiştir">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12M17 20l4-4M17 20l-4-4" />
+          </svg>
+        </button>
+
+        <div class="field-group">
+          <label class="field-label" for="targetLang">Hedef Dil</label>
+          <select id="targetLang" onchange="calculateQuote()">
+            <option value="tr" selected>Türkçe 🇹🇷</option>
+            <option value="en">İngilizce 🇬🇧</option>
+            <option value="fr">Fransızca 🇫🇷</option>
+            <option value="es">İspanyolca 🇪🇸</option>
+            <option value="ru">Rusça 🇷🇺</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Uzmanlık Alanı Seçimi (Drop-down Menu) -->
+      <div class="widget-row">
+        <div class="field-group">
+          <label class="field-label" for="expertiseArea">
+            <span>Uzmanlık Alanı</span>
+            <span style="color: var(--accent-cyan);">Birim Çarpanı Otomatik Uygulanır</span>
+          </label>
+          <select id="expertiseArea" onchange="calculateQuote()">
+            <option value="general" selected>Genel Metin (Standart Çeviri)</option>
+            <option value="legal">Hukuki Çeviri (Sözleşme, Mahkeme Evrakları)</option>
+            <option value="medical">Tıbbi / Medikal Çeviri (Rapor, Klinik Araştırma)</option>
+            <option value="technical">Teknik / Mühendislik Çevirisi (Şartname, Kılavuz)</option>
+            <option value="academic">Akademik Çeviri (Tez, Makale, Bildiri)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Hesaplama Yöntemi Sekmeleri (Sayfa Sayısı / Dosya Yükle) -->
+      <div class="input-mode-tabs">
+        <button class="tab-btn active" id="tabPageBtn" onclick="switchCalcTab('page')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          Sayfa Sayısı İle Hesapla
+        </button>
+        <button class="tab-btn" id="tabFileBtn" onclick="switchCalcTab('file')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Dosya Yükle (PDF / Word)
+        </button>
+      </div>
+
+      <!-- Sayfa Sayısı Giriş Kartı -->
+      <div id="pageInputWrapper" class="page-input-card">
+        <label class="field-label" style="font-size: 0.95rem; color: var(--text-white);">
+          Çevrilmesini İstediğiniz Metin Kaç Sayfadır?
+        </label>
+        <div class="page-input-wrapper">
+          <input type="number" id="pageCountInput" class="page-num-input" value="3" min="1" max="1000"
+            oninput="calculateQuote()">
+          <div class="page-info-note">
+            ℹ️ Sektör standardı uyarınca <strong>1 Standart Çeviri Sayfası = 1.000 Boşluklu Karakter</strong> olarak
+            kabul edilir.
+          </div>
+        </div>
+      </div>
+
+      <!-- Dosya Yükleme Alanı -->
+      <div id="fileInputWrapper" style="display: none; margin-bottom: 1.4rem;">
+        <div class="file-upload-box" onclick="document.getElementById('calcFileInput').click()">
+          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+            <path d="M12 12v9"></path>
+            <path d="m16 16-4-4-4 4"></path>
+          </svg>
+          <h4 style="font-weight: 700; margin-bottom: 0.3rem;">Belgenizi Sürükleyin veya Seçin</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem;" id="fileNameDisplay">PDF, DOC, DOCX veya TXT (Max
+            25MB)</p>
+          <input type="file" id="calcFileInput" accept=".pdf,.doc,.docx,.txt" style="display: none;"
+            onchange="handleFileUpload(event)">
+        </div>
+      </div>
+
+      <!-- Canlı Karakter ve Sayfa Sayım Çubuğu -->
+      <div class="char-stats-bar">
+        <div class="stat-item">
+          <span>Toplam Sayfa:</span>
+          <strong id="pageCountDisplay">3 Sayfa</strong>
+        </div>
+        <div class="stat-item">
+          <span>Tahmini Karakter:</span>
+          <strong id="charCountDisplay">3.000 Karakter</strong>
+        </div>
+        <div class="stat-item">
+          <span>Birim Hesabı:</span>
+          <strong id="unitCountDisplay">3.00 x 1000 Karakter</strong>
+        </div>
+      </div>
+
+      <!-- Tahmini Fiyat Gösterge Kutusu (%10 - %15 İndirimli) -->
+      <div class="price-display-box">
+        <div class="price-range-title">Tahmini Fiyat Aralığı (%10 - %15 İndirimli)</div>
+        <div class="price-range-value" id="priceRangeValue">₺0.00 - ₺0.00</div>
+        <div class="price-note">
+          * Fiyat 1000 Karakter (Boşluklu) / 1 Sayfa birim hesabı ve seçilen uzmanlık alanı üzerinden indirimli tahmini
+          aralıktır.
+        </div>
+      </div>
+
+      <!-- Kesin Fiyat Al ve Sipariş Oluştur CTA Butonu -->
+      <button class="cta-order-btn" onclick="openOrderModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        Kesin Fiyat Al ve Sipariş Oluştur
+      </button>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       ÇEVİRİ SÜRECİ BÖLÜMÜ (#surec)
+       ======================================================== -->
+  <section id="surec" style="padding: 6rem 8%; max-width: 1400px; margin: 0 auto; position: relative; z-index: 2;">
+    <div style="text-align: center; margin-bottom: 3.5rem;">
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; border-radius: 9999px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">
+        <span>✦</span> ISO 17100 Standartlarında Süreç
+      </div>
+      <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-white); margin-bottom: 0.8rem;">
+        4 Aşamalı <span style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Kalite Güvence Sürecimiz</span>
+      </h2>
+      <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto; font-size: 0.95rem; line-height: 1.6;">
+        Belgenizin ilk analizinden teslimatına kadar her aşama, alanında uzman çevirmenler ve yapay zeka destekli CAT kalite kontrol araçlarıyla yürütülür.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+      <!-- Adım 1 -->
+      <div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 1.25rem; padding: 2rem; position: relative; overflow: hidden; backdrop-filter: blur(12px);">
+        <div style="font-size: 2.5rem; font-weight: 900; color: var(--accent-cyan); opacity: 0.25; position: absolute; right: 1.5rem; top: 1rem; font-family: monospace;">01</div>
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan); margin-bottom: 1.2rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-white); margin-bottom: 0.6rem;">1. Analiz & Terminoloji</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">Belgeniz biçimlendirme kalkanına alınır, sektörel terimler TM veritabanıyla taranır ve proje planı oluşturulur.</p>
+      </div>
+
+      <!-- Adım 2 -->
+      <div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 1.25rem; padding: 2rem; position: relative; overflow: hidden; backdrop-filter: blur(12px);">
+        <div style="font-size: 2.5rem; font-weight: 900; color: var(--accent-blue); opacity: 0.25; position: absolute; right: 1.5rem; top: 1rem; font-family: monospace;">02</div>
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(37, 99, 235, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-blue); margin-bottom: 1.2rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-white); margin-bottom: 0.6rem;">2. Uzman Tercüman Çevirisi</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">Hukuk, tıp, teknik veya akademik alanında en az 7 yıl deneyimli uzman tercüman tarafından hedef dile aktarılır.</p>
+      </div>
+
+      <!-- Adım 3 -->
+      <div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 1.25rem; padding: 2rem; position: relative; overflow: hidden; backdrop-filter: blur(12px);">
+        <div style="font-size: 2.5rem; font-weight: 900; color: var(--accent-purple); opacity: 0.25; position: absolute; right: 1.5rem; top: 1rem; font-family: monospace;">03</div>
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(129, 140, 248, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-purple); margin-bottom: 1.2rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-white); margin-bottom: 0.6rem;">3. İki Kademeli Editör & QA</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">Rakam, tarih, noktalama ve kalkan etiketleri otomatik ve çift editör kontrolüyle %100 doğrulanır.</p>
+      </div>
+
+      <!-- Adım 4 -->
+      <div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 1.25rem; padding: 2rem; position: relative; overflow: hidden; backdrop-filter: blur(12px);">
+        <div style="font-size: 2.5rem; font-weight: 900; color: var(--accent-emerald); opacity: 0.25; position: absolute; right: 1.5rem; top: 1rem; font-family: monospace;">04</div>
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(52, 211, 153, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald); margin-bottom: 1.2rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-white); margin-bottom: 0.6rem;">4. Birebir Format Koruma</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">Orijinal PDF, Word veya SRT formatınız bozulmadan, mizanpajı korunmuş biçimde zamanında teslim edilir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       İLETİŞİM VE DANIŞMA BÖLÜMÜ (#iletisim)
+       ======================================================== -->
+  <section id="iletisim" style="padding: 6rem 8%; max-width: 1400px; margin: 0 auto; position: relative; z-index: 2;">
+    <div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 1.75rem; padding: 3rem; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; align-items: center;">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; border-radius: 9999px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--accent-cyan); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            <span>📍</span> 7/24 Kesintisiz İletişim
+          </div>
+          <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-white); margin-bottom: 1rem; line-height: 1.2;">
+            Bize Ulaşın, <span style="color: var(--accent-cyan);">Projenizi Birlikte</span> Başlatalım.
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">
+            Acil çeviri talepleriniz, yeminli tercüman onayı veya kurumsal sözleşmeleriniz için müşteri temsilcimizle doğrudan iletişime geçebilirsiniz.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; color: var(--text-white); font-size: 0.95rem;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(56,189,248,0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">E-posta Destek</div>
+                <strong>info@arikstudio.com</strong>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; color: var(--text-white); font-size: 0.95rem;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(37,99,235,0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-blue);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Telefon / Santral</div>
+                <strong>+90 (212) 800 24 24</strong>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; color: var(--text-white); font-size: 0.95rem;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(52,211,153,0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">WhatsApp Hızlı Danışma</div>
+                <strong>+90 (555) 012 34 56</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 1.25rem; padding: 2rem;">
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-white); margin-bottom: 0.5rem;">Hızlı Mesaj Gönderin</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">En geç 15 dakika içinde uzman proje yöneticimiz size dönüş yapacaktır.</p>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <input type="text" placeholder="Adınız Soyadınız" style="padding: 0.8rem 1rem; border-radius: 0.75rem; border: 1px solid var(--glass-border); background: var(--card-bg); color: var(--text-white); font-size: 0.9rem; outline: none;">
+            <input type="email" placeholder="E-posta Adresiniz" style="padding: 0.8rem 1rem; border-radius: 0.75rem; border: 1px solid var(--glass-border); background: var(--card-bg); color: var(--text-white); font-size: 0.9rem; outline: none;">
+            <textarea placeholder="Çeviri ihtiyacınız veya sormak istedikleriniz..." rows="3" style="padding: 0.8rem 1rem; border-radius: 0.75rem; border: 1px solid var(--glass-border); background: var(--card-bg); color: var(--text-white); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+            <button onclick="alert('Mesajınız başarıyla iletildi. Uzman ekibimiz en kısa sürede dönüş yapacaktır.')" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); color: white; border: none; padding: 0.9rem; border-radius: 0.75rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s;">
+              Mesajı İlet
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal Form: Kesin Fiyat ve Sipariş İsteği -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="closeOrderModal()">✕</button>
+
+      <div class="modal-title-group">
+        <h3>Kesin Fiyat Teklifi ve Sipariş Talebi</h3>
+        <p>Lütfen iletişim bilgilerinizi giriniz. Uzman ekibimiz belgenizi inceleyip size özel indirimli kesin teklifi
+          iletecektir.</p>
+      </div>
+
+      <!-- Özeti Gösteren Küçük Kutu -->
+      <div class="modal-summary-box">
+        <div class="modal-summary-item">
+          <span>Dil Çifti:</span>
+          <strong id="modalLangPair">İngilizce ➔ Türkçe</strong>
+        </div>
+        <div class="modal-summary-item">
+          <span>Uzmanlık:</span>
+          <strong id="modalExpertise">Genel Metin</strong>
+        </div>
+        <div class="modal-summary-item">
+          <span>Hesaplanan Sayfa:</span>
+          <strong id="modalCharCount">3 Sayfa (3.000 Karakter)</strong>
+        </div>
+        <div class="modal-summary-item">
+          <span>Tahmini Fiyat Aralığı:</span>
+          <strong id="modalPriceRange">₺0 - ₺0</strong>
+        </div>
+      </div>
+
+      <form class="modal-form" onsubmit="handleFormSubmit(event)">
+        <div class="field-group">
+          <label class="field-label" for="orderName">Ad Soyad *</label>
+          <input type="text" id="orderName" placeholder="Örn: Ahmet Yılmaz" required>
+        </div>
+
+        <div class="widget-row" style="margin-bottom: 0;">
+          <div class="field-group">
+            <label class="field-label" for="orderEmail">E-posta Adresi *</label>
+            <input type="email" id="orderEmail" placeholder="ahmet@example.com" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="orderPhone">Telefon Numarası *</label>
+            <input type="tel" id="orderPhone" placeholder="0555 123 45 67" required>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="orderNotes">Not / Özel İstek Alanı (İsteğe Bağlı)</label>
+          <textarea id="orderNotes" placeholder="Teslim süresi, onay türü (Noter/Apostil) veya özel talimatlarınız..."
+            style="min-height: 80px;"></textarea>
+        </div>
+
+        <!-- Güven Verici Bilgi Notu -->
+        <div class="reassurance-note">
+          ℹ️ <strong>Önemli Bilgilendirme:</strong> Tahmini fiyat aralığı genel bilgilendirme amaçlıdır. Uzman ekibimiz
+          belgenizi inceleyip %100 kesin ve size özel indirimli fiyat teklifini en geç gün içerisinde e-posta/telefon
+          üzerinden iletecektir.
+        </div>
+
+        <div class="success-banner" id="successBanner">
+          ✓ Talebiniz Başarıyla Alındı! Müşteri temsilcimiz belgenizi inceleyip en kısa sürede sizinle iletişime
+          geçecektir.
+        </div>
+
+        <button type="submit" class="cta-order-btn" id="submitOrderBtn">
+          Teklif Talebini Gönder
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- Tema Yönetimi (Dark / Light Senkronizasyonu) ---
+    function initTeorikTheme() {
+      const saved = localStorage.getItem('cat_theme') || 'dark';
+      applyTeorikTheme(saved === 'light' ? 'light' : 'dark');
+    }
+
+    function applyTeorikTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      }
+      const icon = document.getElementById('themeToggleIcon');
+      const text = document.getElementById('themeToggleText');
+      if (theme === 'light') {
+        if (icon) icon.innerText = '☀️';
+        if (text) text.innerText = 'Aydınlık';
+      } else {
+        if (icon) icon.innerText = '🌙';
+        if (text) text.innerText = 'Koyu';
+      }
+    }
+
+    function toggleTeorikTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTeorikTheme(next);
+      try {
+        localStorage.setItem('cat_theme', next);
+      } catch (e) {}
+    }
+
+    initTeorikTheme();
+
+    // --- 1. Ülke & Koordinat Verileri ---
+    const countriesData = [
+      {
+        id: 'tr',
+        name: 'Türkiye',
+        flag: '🇹🇷',
+        lang: 'Türkçe • Ana Merkez',
+        lat: 39.0,
+        lon: 35.0,
+        color: '#00f0ff',
+        hexColor: 0x00f0ff
+      },
+      {
+        id: 'en',
+        name: 'İngiltere / ABD',
+        flag: '🇬🇧',
+        lang: 'İngilizce • Küresel İş',
+        lat: 52.5,
+        lon: -1.5,
+        color: '#3b82f6',
+        hexColor: 0x3b82f6
+      },
+      {
+        id: 'de',
+        name: 'Almanya',
+        flag: '🇩🇪',
+        lang: 'Almanca • Mühendislik',
+        lat: 51.1,
+        lon: 10.4,
+        color: '#eab308',
+        hexColor: 0xeab308
+      },
+      {
+        id: 'fr',
+        name: 'Fransa',
+        flag: '🇫🇷',
+        lang: 'Fransızca • Diplomasi',
+        lat: 46.2,
+        lon: 2.2,
+        color: '#ec4899',
+        hexColor: 0xec4899
+      },
+      {
+        id: 'es',
+        name: 'İspanya',
+        flag: '🇪🇸',
+        lang: 'İspanyolca • Lokalizasyon',
+        lat: 40.4,
+        lon: -3.7,
+        color: '#f97316',
+        hexColor: 0xf97316
+      },
+      {
+        id: 'ru',
+        name: 'Rusya',
+        flag: '🇷🇺',
+        lang: 'Rusça • Ticari Evrak',
+        lat: 55.7,
+        lon: 37.6,
+        color: '#10b981',
+        hexColor: 0x10b981
+      }
+    ];
+
+    let currentActiveIndex = 0;
+
+    // --- 2. SAYFA BAZLI FİYAT HESAPLAMA (1 SAYFA = 1.000 BOŞLUKLU KARAKTER) ---
+
+    // Uzmanlık Alanı Çarpanları
+    const expertiseMultipliers = {
+      general: 1.00,
+      legal: 1.35,
+      medical: 1.45,
+      technical: 1.30,
+      academic: 1.25
+    };
+
+    // Dil Çifti Çarpanları
+    const languageMultipliers = {
+      en: 1.00,
+      tr: 0.90,
+      fr: 1.20,
+      es: 1.15,
+      ru: 1.30
+    };
+
+    let activeCalcMode = 'page';
+    let uploadedFileCharCount = 0;
+    let uploadedFilePageCount = 0;
+    let currentCalculatedPriceRange = { low: 0, high: 0 };
+    let currentTotalPages = 3;
+    let currentTotalChars = 3000;
+
+    function switchCalcTab(mode) {
+      activeCalcMode = mode;
+      const tabPage = document.getElementById('tabPageBtn');
+      const tabFile = document.getElementById('tabFileBtn');
+      const pageWrapper = document.getElementById('pageInputWrapper');
+      const fileWrapper = document.getElementById('fileInputWrapper');
+
+      if (mode === 'page') {
+        tabPage.classList.add('active');
+        tabFile.classList.remove('active');
+        pageWrapper.style.display = 'block';
+        fileWrapper.style.display = 'none';
+      } else {
+        tabFile.classList.add('active');
+        tabPage.classList.remove('active');
+        fileWrapper.style.display = 'block';
+        pageWrapper.style.display = 'none';
+      }
+      calculateQuote();
+    }
+
+    function swapLanguages() {
+      const srcSelect = document.getElementById('srcLang');
+      const targetSelect = document.getElementById('targetLang');
+      const temp = srcSelect.value;
+      srcSelect.value = targetSelect.value;
+      targetSelect.value = temp;
+      calculateQuote();
+    }
+
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileNameDisplay = document.getElementById('fileNameDisplay');
+      fileNameDisplay.innerHTML = `<strong style="color: var(--accent-cyan);">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB) - <span id="fileParseStatus" style="color: #94a3b8;">Ayrıştırılıyor...</span>`;
+
+      const ext = file.name.toLowerCase().split('.').pop();
+      let extractedText = "";
+
+      try {
+        if (ext === 'docx' && typeof mammoth !== 'undefined') {
+          const buffer = await file.arrayBuffer();
+          const res = await mammoth.extractRawText({ arrayBuffer: buffer });
+          if (res && res.value) extractedText = res.value;
+        } else if (ext === 'pdf' && typeof pdfjsLib !== 'undefined') {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const buffer = await file.arrayBuffer();
+          const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+          const pageTexts = [];
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const content = await page.getTextContent();
+            pageTexts.push(content.items.map(it => it.str).join(' '));
+          }
+          extractedText = pageTexts.join('\n');
+        } else if (file.type === 'text/plain' || ext === 'txt' || ext === 'md' || ext === 'srt') {
+          extractedText = await file.text();
+        }
+      } catch (err) {
+        console.warn("Metin ayıklama uyarısı:", err);
+      }
+
+      if (extractedText && extractedText.trim().length > 0) {
+        uploadedFileCharCount = extractedText.length;
+        uploadedFilePageCount = Math.max(1, Math.ceil(uploadedFileCharCount / 1000));
+        const statusEl = document.getElementById('fileParseStatus');
+        if (statusEl) statusEl.innerHTML = `<span style="color:#34d399;">✓ ${uploadedFileCharCount.toLocaleString('tr-TR')} Karakter Okundu</span>`;
+        calculateQuote();
+      } else {
+        // PDF ve Word belgeleri için tahmini sayfa/karakter hesabı
+        uploadedFileCharCount = Math.max(1000, Math.round(file.size / 1.6));
+        uploadedFilePageCount = Math.max(1, Math.ceil(uploadedFileCharCount / 1000));
+        const statusEl = document.getElementById('fileParseStatus');
+        if (statusEl) statusEl.innerHTML = `<span>(Tahmini hesaplama)</span>`;
+        calculateQuote();
+      }
+    }
+
+    function calculateQuote() {
+      let pageCount = 1;
+      let charCountWithSpaces = 1000;
+
+      if (activeCalcMode === 'page') {
+        const inputVal = parseInt(document.getElementById('pageCountInput').value) || 1;
+        pageCount = Math.max(1, inputVal);
+        // Sektör Standardı: 1 Sayfa = 1.000 Boşluklu Karakter
+        charCountWithSpaces = pageCount * 1000;
+      } else {
+        charCountWithSpaces = uploadedFileCharCount || 1000;
+        pageCount = Math.max(1, Math.ceil(charCountWithSpaces / 1000));
+      }
+
+      currentTotalPages = pageCount;
+      currentTotalChars = charCountWithSpaces;
+
+      // Ana Birim: 1000 Karakter (Boşluklu) = 1 Sayfa
+      const unitCount = charCountWithSpaces / 1000;
+
+      // UI Göstergelerini Güncelle
+      document.getElementById('pageCountDisplay').innerText = `${pageCount.toLocaleString('tr-TR')} Sayfa`;
+      document.getElementById('charCountDisplay').innerText = `${charCountWithSpaces.toLocaleString('tr-TR')} Karakter`;
+      document.getElementById('unitCountDisplay').innerText = `${unitCount.toFixed(1)} x 1000 Karakter`;
+
+      // Arka Plandaki Gerçek 1000 Karakter / 1 Sayfa Birim Fiyatı (260 ₺ Temel Taban Fiyat)
+      const baseRatePerPage = 260;
+
+      const srcLang = document.getElementById('srcLang').value;
+      const targetLang = document.getElementById('targetLang').value;
+      const expertiseKey = document.getElementById('expertiseArea').value;
+
+      const expMult = expertiseMultipliers[expertiseKey] || 1.0;
+      const langMult = (languageMultipliers[srcLang] || 1.0) * (languageMultipliers[targetLang] || 1.0);
+
+      // Gerçek Arka Plan Hesaplaması
+      const actualCalculatedTotal = pageCount * baseRatePerPage * expMult * langMult;
+
+      // KULLANICIYA GÖSTERİLECEK STRATEJİK TAHMİNİ FİYAT ARALIĞI (%10 ile %15 ALTINDA)
+      const lowEstimate = Math.round(actualCalculatedTotal * 0.85);  // %15 Altı
+      const highEstimate = Math.round(actualCalculatedTotal * 0.90); // %10 Altı
+
+      currentCalculatedPriceRange = { low: lowEstimate, high: highEstimate };
+
+      document.getElementById('priceRangeValue').innerHTML = `₺${lowEstimate.toLocaleString('tr-TR')} - ₺${highEstimate.toLocaleString('tr-TR')}`;
+    }
+
+    // Modal İşlemleri
+    function openOrderModal() {
+      const modal = document.getElementById('orderModal');
+      modal.classList.add('active');
+
+      const srcText = document.getElementById('srcLang').options[document.getElementById('srcLang').selectedIndex].text.split(' ')[0];
+      const targetText = document.getElementById('targetLang').options[document.getElementById('targetLang').selectedIndex].text.split(' ')[0];
+      const expText = document.getElementById('expertiseArea').options[document.getElementById('expertiseArea').selectedIndex].text.split('(')[0];
+
+      document.getElementById('modalLangPair').innerText = `${srcText} ➔ ${targetText}`;
+      document.getElementById('modalExpertise').innerText = expText;
+      document.getElementById('modalCharCount').innerText = `${currentTotalPages} Sayfa (${currentTotalChars.toLocaleString('tr-TR')} Karakter)`;
+      document.getElementById('modalPriceRange').innerText = `₺${currentCalculatedPriceRange.low.toLocaleString('tr-TR')} - ₺${currentCalculatedPriceRange.high.toLocaleString('tr-TR')}`;
+
+      document.getElementById('successBanner').style.display = 'none';
+      document.getElementById('submitOrderBtn').style.display = 'flex';
+    }
+
+    function closeOrderModal() {
+      document.getElementById('orderModal').classList.remove('active');
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      document.getElementById('submitOrderBtn').style.display = 'none';
+      document.getElementById('successBanner').style.display = 'block';
+
+      setTimeout(() => {
+        closeOrderModal();
+      }, 3500);
+    }
+
+    calculateQuote();
+
+    // --- 3. ThreeGlobe Library Direct Integration (Official vasturiano Engine) ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(46, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.z = 245;
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Dynamic Ambient & Point Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+    scene.add(ambientLight);
+
+    const pointLight1 = new THREE.PointLight(0x38bdf8, 2.5, 600);
+    pointLight1.position.set(160, 160, 160);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0x2563eb, 1.8, 600);
+    pointLight2.position.set(-160, -100, -100);
+    scene.add(pointLight2);
+
+    const globeRadius = 82;
+    const globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+
+    // Official vasturiano ThreeGlobe Object Setup
+    let Globe = null;
+    if (typeof ThreeGlobe !== 'undefined') {
+      Globe = new ThreeGlobe({ animateIn: false })
+        .globeImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-dark.jpg')
+        .bumpImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
+        .showAtmosphere(true)
+        .atmosphereColor('#38bdf8')
+        .atmosphereAltitude(0.18);
+
+      Globe.scale.set(0.82, 0.82, 0.82);
+      globeGroup.add(Globe);
+
+      // Load GeoJSON World Map Data into ThreeGlobe with resilient multi-tier fallback
+      const loadGeoJsonData = async () => {
+        const cdnUrls = [
+          'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
+          'https://unpkg.com/world-atlas@2.0.2/countries-110m.json',
+          'https://raw.githubusercontent.com/topojson/world-atlas/master/countries-110m.json'
+        ];
+        
+        for (const url of cdnUrls) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const topoData = await res.json();
+            if (topoData && topoData.objects && topoData.objects.countries && typeof topojson !== 'undefined') {
+              const countries = topojson.feature(topoData, topoData.objects.countries);
+              Globe.hexPolygonsData(countries.features)
+                .hexPolygonResolution(3)
+                .hexPolygonMargin(0.2)
+                .hexPolygonColor(() => '#ffffff');
+              break; // Successfully loaded
+            }
+          } catch (e) {
+            // Silently try next CDN or rely on Earth texture map
+          }
+        }
+      };
+      loadGeoJsonData();
+
+      // Expanded Translation Light Arcs originating from Türkiye (39°N, 35°E) to global destinations
+      const expandedArcs = [
+        { startLat: 39.0, startLng: 35.0, endLat: 38.0, endLng: -97.0, color: '#38bdf8' },  // ABD / Amerika
+        { startLat: 39.0, startLng: 35.0, endLat: 56.0, endLng: -106.0, color: '#60a5fa' }, // Kanada
+        { startLat: 39.0, startLng: 35.0, endLat: 52.5, endLng: -1.5, color: '#3b82f6' },   // İngiltere (UK)
+        { startLat: 39.0, startLng: 35.0, endLat: 51.1, endLng: 10.4, color: '#eab308' },   // Almanya
+        { startLat: 39.0, startLng: 35.0, endLat: 46.2, endLng: 2.2, color: '#ec4899' },    // Fransa
+        { startLat: 39.0, startLng: 35.0, endLat: 40.4, endLng: -3.7, color: '#f97316' },   // İspanya
+        { startLat: 39.0, startLng: 35.0, endLat: 55.7, endLng: 37.6, color: '#10b981' },   // Rusya
+        { startLat: 39.0, startLng: 35.0, endLat: 36.2, endLng: 138.2, color: '#f43f5e' },  // Japonya
+        { startLat: 39.0, startLng: 35.0, endLat: 35.8, endLng: 104.1, color: '#a855f7' },  // Çin
+        { startLat: 39.0, startLng: 35.0, endLat: 23.8, endLng: 45.0, color: '#34d399' }    // Suudi Arabistan
+      ];
+
+      Globe.arcsData(expandedArcs)
+        .arcColor('color')
+        .arcDashLength(0.4)
+        .arcDashGap(0.2)
+        .arcDashAnimateTime(2000)
+        .arcStroke(0.75);
+
+      // Sleek subtle pulse rings at destination hubs
+      const ringsData = expandedArcs.map(a => ({
+        lat: a.endLat,
+        lng: a.endLng,
+        color: a.color
+      }));
+
+      Globe.ringsData(ringsData)
+        .ringColor('color')
+        .ringMaxRadius(4.5)
+        .ringPropagationSpeed(2.5)
+        .ringRepeatPeriod(1200);
+    } else {
+      // Fallback Wireframe Sphere
+      const sphereGeometry = new THREE.SphereGeometry(globeRadius - 0.5, 36, 18);
+      const sphereMaterial = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.25 });
+      globeGroup.add(new THREE.LineSegments(new THREE.WireframeGeometry(sphereGeometry), sphereMaterial));
+    }
+
+    // Hedef Dönüş Açıları
+    let targetRotationY = 0;
+    let targetRotationX = 0;
+
+    // Hedef Ülkeye Küreyi Odaklama Fonksiyonu
+    function focusCountry(index) {
+      currentActiveIndex = index;
+      const c = countriesData[index];
+
+      // Küreyi hedef ülkenin enlem/boylamına tam odaklama
+      targetRotationY = -(c.lon * Math.PI / 180);
+      targetRotationX = (c.lat * Math.PI / 180) * 0.65;
+
+      // UI Badge Güncelleme
+      document.getElementById('badgeFlag').innerText = c.flag;
+      document.getElementById('badgeCountry').innerText = c.name;
+      const badgeLang = document.getElementById('badgeLang');
+      badgeLang.innerText = c.lang;
+      badgeLang.style.color = c.color;
+
+      // Stepper Dots
+      const dots = document.querySelectorAll('.step-dot');
+      dots.forEach((dot, i) => {
+        if (i === index) dot.classList.add('active');
+        else dot.classList.remove('active');
+      });
+
+      // Cards Active Class
+      const cards = document.querySelectorAll('.country-card');
+      cards.forEach((card, i) => {
+        if (i === index) card.classList.add('active');
+        else card.classList.remove('active');
+      });
+    }
+
+    // --- 5. Scroll Etkileşimi (IntersectionObserver) ---
+    const cards = document.querySelectorAll('.country-card');
+    const observerOptions = {
+      root: null,
+      rootMargin: '-25% 0px -25% 0px',
+      threshold: 0.35
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = parseInt(entry.target.getAttribute('data-index'));
+          focusCountry(index);
+        }
+      });
+    }, observerOptions);
+
+    cards.forEach(card => observer.observe(card));
+
+    function scrollToCard(index) {
+      if (cards[index]) {
+        cards[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function scrollToInteractive() {
+      document.getElementById('hizmetler').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- 6. Drag / Sürükleme Kontrolü ---
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    container.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+
+        targetRotationY += deltaX * 0.005;
+        targetRotationX += deltaY * 0.005;
+
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+    });
+
+    // --- 7. Animasyon Döngüsü ---
+    let time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.04;
+
+      // Yumuşak Dönüş (Lerp Interpolation)
+      globeGroup.rotation.y += (targetRotationY - globeGroup.rotation.y) * 0.06;
+      globeGroup.rotation.x += (targetRotationX - globeGroup.rotation.x) * 0.06;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Pencere Boyut Uyumlaması
+    window.addEventListener('resize', () => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+    // Başlangıçta Türkiye'ye odaklan
+    focusCountry(0);
+  </script>
+</body>
+
+</html>

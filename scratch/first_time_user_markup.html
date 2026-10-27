@@ -1,0 +1,116 @@
+
+    <!-- ======================================================== -->
+    <!-- İLK GİRİŞ KULLANICI ADI & DİL ÇİFTLERİ MODALI (SUPABASE ENTEGRASYONLU) -->
+    <!-- ======================================================== -->
+    <div id="firstTimeUserModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="fluent-card bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-2xl max-w-lg w-full p-6 flex flex-col gap-5 shadow-2xl animate-fadeIn">
+            
+            <!-- Modal Başlık Çubuğu -->
+            <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-neutral-800">
+                <div class="w-10 h-10 rounded-xl bg-cobalt/10 text-cobalt flex items-center justify-center border border-cobalt/20 shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">person_add</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>AuraCAT'e Hoş Geldiniz</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">İlk Kurulum</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Çalışma alanınızı kişiselleştirmek için kullanıcı adınızı ve dil çiftlerinizi belirleyin.</p>
+                </div>
+            </div>
+
+            <!-- Form Alanları -->
+            <form id="firstTimeUserForm" onsubmit="AuraCATFirstTimeUser.handleSubmit(event)" class="space-y-4 text-xs">
+                
+                <!-- 1. Kullanıcı Adı -->
+                <div class="space-y-1">
+                    <label class="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                        <span>Kullanıcı Adı</span>
+                        <span class="text-[10px] text-slate-400 font-normal">Zorunlu</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-mono font-bold">@</span>
+                        <input type="text" id="ft_username" required placeholder="kullanici_adi" pattern="[A-Za-z0-9_\-\.]+"
+                            class="fluent-input w-full pl-8 pr-3 h-9 text-xs rounded-lg font-mono text-slate-900 dark:text-white bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 focus:outline-none focus:border-cobalt">
+                    </div>
+                    <p class="text-[10px] text-slate-400">Sistemde ve çeviri geçmişinizde görünecek kimliğiniz.</p>
+                </div>
+
+                <!-- 2. Dil Çiftleri Seçici Bileşeni -->
+                <div class="space-y-2">
+                    <label class="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                        <span>Çalıştığınız Dil Çiftleri</span>
+                        <span class="text-[10px] text-slate-400 font-normal">En az 1 çift gereklidir</span>
+                    </label>
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 space-y-2.5">
+                        <div class="flex items-center gap-2">
+                            <select id="ft_pair_source" class="h-8 px-2 text-xs rounded-md bg-white dark:bg-neutral-900 border border-slate-300 dark:border-neutral-600 font-mono text-slate-800 dark:text-slate-200">
+                                <option value="EN">EN (İngilizce)</option>
+                                <option value="DE">DE (Almanca)</option>
+                                <option value="FR">FR (Fransızca)</option>
+                                <option value="ES">ES (İspanyolca)</option>
+                                <option value="IT">IT (İtalyanca)</option>
+                                <option value="RU">RU (Rusça)</option>
+                                <option value="TR">TR (Türkçe)</option>
+                                <option value="AR">AR (Arapça)</option>
+                                <option value="JA">JA (Japonca)</option>
+                                <option value="ZH">ZH (Çince)</option>
+                            </select>
+                            <span class="font-mono text-slate-400 font-bold">➔</span>
+                            <select id="ft_pair_target" class="h-8 px-2 text-xs rounded-md bg-white dark:bg-neutral-900 border border-slate-300 dark:border-neutral-600 font-mono text-slate-800 dark:text-slate-200">
+                                <option value="TR" selected>TR (Türkçe)</option>
+                                <option value="EN">EN (İngilizce)</option>
+                                <option value="DE">DE (Almanca)</option>
+                                <option value="FR">FR (Fransızca)</option>
+                                <option value="ES">ES (İspanyolca)</option>
+                                <option value="IT">IT (İtalyanca)</option>
+                                <option value="RU">RU (Rusça)</option>
+                            </select>
+                            <button type="button" onclick="AuraCATFirstTimeUser.addPair()" class="h-8 px-3 rounded-md bg-white dark:bg-neutral-700 hover:bg-slate-100 border border-slate-300 dark:border-neutral-600 text-xs font-semibold text-cobalt dark:text-blue-400 transition-colors cursor-pointer">
+                                + Ekle
+                            </button>
+                        </div>
+                        
+                        <!-- Eklenen Dil Çiftleri Kapsülleri -->
+                        <div id="ft_pairs_container" class="flex flex-wrap gap-1.5 pt-1">
+                            <!-- JS ile dinamik render edilir -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Supabase Bağlantı Durumu & Yapılandırma (İsteğe Bağlı Akordeon) -->
+                <div class="pt-2 border-t border-slate-100 dark:border-neutral-800">
+                    <button type="button" onclick="AuraCATFirstTimeUser.toggleSupabaseConfig()" class="text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 flex items-center justify-between w-full font-mono cursor-pointer">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Supabase Bulut Veritabanı Yapılandırması</span>
+                        </span>
+                        <span id="ft_supabase_toggle_icon">▾</span>
+                    </button>
+                    
+                    <div id="ft_supabase_config_panel" class="hidden mt-2 p-3 rounded-lg bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 space-y-2 text-[11px]">
+                        <div>
+                            <label class="font-mono text-slate-600 dark:text-slate-400">Supabase Project URL:</label>
+                            <input type="text" id="ft_supabase_url" placeholder="https://xyzcompany.supabase.co"
+                                class="fluent-input w-full h-7 px-2 text-xs rounded bg-white dark:bg-neutral-900 border border-slate-300 dark:border-neutral-600 font-mono">
+                        </div>
+                        <div>
+                            <label class="font-mono text-slate-600 dark:text-slate-400">Supabase Anon Key:</label>
+                            <input type="password" id="ft_supabase_anon_key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                class="fluent-input w-full h-7 px-2 text-xs rounded bg-white dark:bg-neutral-900 border border-slate-300 dark:border-neutral-600 font-mono">
+                        </div>
+                        <p class="text-[10px] text-slate-400">Boş bırakırsanız varsayılan bulut havuzu veya yerel eşzamanlama hafızası kullanılır.</p>
+                    </div>
+                </div>
+
+                <!-- Modal Alt Butonları -->
+                <div class="pt-3 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-end gap-2.5">
+                    <button type="submit" id="btnSaveFirstTimeUser" class="fluent-btn-primary px-6 h-10 text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/30 bg-cobalt hover:bg-cobalt-hover text-white cursor-pointer transition-all">
+                        <span class="material-symbols-outlined text-[18px]">check</span>
+                        <span>Kaydet ve Çalışma Alanını Başlat</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>

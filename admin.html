@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSP Yönetim Portalı & Freelance Tercüman Havuzu | Arık Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Tailwind CSS (Play CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            indigo: '#4f46e5',
+                            sky: '#0284c7',
+                            emerald: '#059669',
+                            amber: '#d97706',
+                            rose: '#e11d48',
+                            purple: '#7c3aed'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Modern Ferah Açık Tema (Light Mode) Glassmorphism - Yüksek Kontrast */
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.09) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #0f172a;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+        }
+
+        .glass-card-hover {
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card-hover:hover {
+            background: #ffffff;
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.08), 0 6px 12px -2px rgba(99, 102, 241, 0.04);
+        }
+
+        .glass-input {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            transition: all 0.2s ease;
+        }
+        .glass-input:focus {
+            border-color: #4f46e5;
+            background: #ffffff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Custom Scrollbar for Light Theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.6);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="min-h-screen flex flex-row font-sans selection:bg-indigo-500 selection:text-white text-slate-900">
+
+    <!-- ========================================================
+         SOL SABİT DRAWER / NAVİGASYON MENÜSÜ (HER ZAMAN AÇIK)
+         ======================================================== -->
+    <aside id="permanentSidebar" class="w-64 shrink-0 glass-card border-r border-slate-200/90 flex flex-col justify-between sticky top-0 h-screen z-30 select-none">
+        
+        <!-- Üst Logo & LSP Kimliği -->
+        <div class="p-4 border-b border-slate-200/80 bg-white/70">
+            <a href="index.html" class="flex items-center gap-3 group cursor-pointer" title="Çeviri Editörüne Dön">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform shrink-0">
+                    <span class="material-symbols-outlined text-[22px]">translate</span>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-sm font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5 truncate">
+                        <span>ARIK STUDIO</span>
+                        <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 font-bold">LSP</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 truncate font-medium">Yönetim Paneli & Havuz</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 8 ANA MODÜL MENÜ LİSTESİ -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto" id="leftNavContainer">
+            
+            <!-- 1. Ana Sayfa -->
+            <button onclick="switchModule('dashboard')" id="navBtn-dashboard" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer bg-indigo-50 text-indigo-950 font-bold border border-indigo-200 shadow-xs">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span class="material-symbols-outlined text-[18px]">dashboard</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs truncate">Ana Sayfa</div>
+                    <div class="text-[10px] text-indigo-600 font-medium truncate">Finans & Genel Durum</div>
+                </div>
+            </button>
+
+            <!-- 2. Finans & Hakediş -->
+            <button onclick="switchModule('finance')" id="navBtn-finance" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">payments</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate">Finans & Hakediş</div>
+                    <div class="text-[10px] text-slate-500 truncate">Ciro & Büro Ödemeleri</div>
+                </div>
+            </button>
+
+            <!-- 3. Üniversite Lisansları -->
+            <button onclick="switchModule('university')" id="navBtn-university" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-800 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">school</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate">Üniversite Lisansları</div>
+                    <div class="text-[10px] text-slate-500 truncate">Ücretsiz Kampüs Ağı</div>
+                </div>
+            </button>
+
+            <!-- 4. Tercümanlar -->
+            <button onclick="switchModule('translators')" id="navBtn-translators" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">badge</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate flex items-center justify-between">
+                        <span>Tercümanlar</span>
+                        <span id="sidebarCountTranslators" class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-bold">0</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 truncate">Dil Çiftleri & Mesajlaşma</div>
+                </div>
+            </button>
+
+            <!-- 5. Kayıtlı Hesaplar -->
+            <button onclick="switchModule('accounts')" id="navBtn-accounts" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate">Kayıtlı Hesaplar</div>
+                    <div class="text-[10px] text-slate-500 truncate">Ücretsiz & Bekleyen Hesaplar</div>
+                </div>
+            </button>
+
+            <!-- 6. Çeviri Büroları -->
+            <button onclick="switchModule('agencies')" id="navBtn-agencies" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">business</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate">Çeviri Büroları</div>
+                    <div class="text-[10px] text-slate-500 truncate">Tüm Dil Çiftleri & Kadro</div>
+                </div>
+            </button>
+
+            <!-- 7. Aktarılan Metinler (Loglar) -->
+            <button onclick="switchModule('transfers')" id="navBtn-transfers" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">history_toggle_off</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate">Aktarılan Metinler</div>
+                    <div class="text-[10px] text-slate-500 truncate">Giriş-Çıkış & Veri Logları</div>
+                </div>
+            </button>
+
+            <!-- 8. Destek Masası -->
+            <button onclick="switchModule('support')" id="navBtn-support" class="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent">
+                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">support_agent</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate flex items-center justify-between">
+                        <span>Destek Masası</span>
+                        <span id="sidebarCountSupport" class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-bold">0</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 truncate">Canlı Mesajlaşma & Biletler</div>
+                </div>
+            </button>
+
+        </nav>
+
+        <!-- Alt Kısım: Editöre Dön & Güvenlik Rozeti -->
+        <div class="p-3 border-t border-slate-200/80 bg-slate-50/90 flex flex-col gap-2">
+            <div class="px-3 py-2 rounded-xl bg-white border border-slate-200 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div class="text-[11px] font-semibold text-slate-700">Zero-Knowledge P2P</div>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5">
+                <a href="index.html" class="py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer" title="CAT Tool Çeviri Editörüne Geri Dön">
+                    <span class="material-symbols-outlined text-[14px]">translate</span>
+                    <span>Editör</span>
+                </a>
+                <a href="landing.html" class="py-2 px-2.5 rounded-xl bg-amber-600/10 hover:bg-amber-600/20 text-amber-800 border border-amber-300 font-bold text-[11px] flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer" title="Tanıtım Vitrinine Git">
+                    <span class="material-symbols-outlined text-[14px]">auto_stories</span>
+                    <span>Vitrin</span>
+                </a>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ========================================================
+         SAĞ TARAF ANA İÇERİK ALANI
+         ======================================================== -->
+    <div class="flex-1 flex flex-col min-w-0">
+        
+        <!-- ÜST BİLGİ BARI -->
+        <header class="sticky top-0 z-20 w-full glass-card border-b border-slate-200/90 px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-bold text-indigo-950">
+                    <span class="material-symbols-outlined text-[18px] text-indigo-700" id="currentModuleIcon">dashboard</span>
+                    <span id="currentModuleLabel">Ana Sayfa</span>
+                </div>
+                <span class="text-xs text-slate-500 hidden md:inline">Kurumsal Yönetim & Tercüman Koordinasyon Arayüzü</span>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <!-- Canlı Tercüman & Mesaj Sayacı -->
+                <div class="hidden sm:flex items-center gap-2 text-xs font-mono">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[11px]">
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                        <span id="headerOnlineCount">0 Tercüman Çevrimiçi</span>
+                    </span>
+                </div>
+
+                <!-- Vitrin Butonu -->
+                <a href="landing.html" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-800 hover:text-amber-950 hover:bg-amber-50 flex items-center gap-1.5 transition-all cursor-pointer border border-amber-200" title="AuraCAT Tanıtım Vitrini">
+                    <span class="material-symbols-outlined text-[16px] text-amber-600">auto_stories</span>
+                    <span>Vitrin</span>
+                </a>
+
+                <!-- Çeviri Editörüne Git Butonu -->
+                <a href="index.html" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-950 hover:bg-slate-100 flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200" title="CAT Tool Çeviri Editörü">
+                    <span class="material-symbols-outlined text-[16px] text-slate-600">translate</span>
+                    <span>Çeviri Editörü</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- ANA İÇERİK KONTEYNERİ -->
+        <main class="flex-1 p-6 flex flex-col gap-6 max-w-7xl w-full mx-auto">
+
+            <!-- ZERO DATA LIABILITY BİLGİLENDİRME BANNERI (KİŞİSEL BULUT ALANI TAMAMEN KALDIRILDI) -->
+            <div class="glass-card rounded-2xl p-4.5 border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-sky-50/60 to-emerald-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-indigo-500/20">
+                        <span class="material-symbols-outlined text-[26px]">enhanced_encryption</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold text-slate-900 tracking-tight">Sıfır Sunucu Maliyeti & Zero-Knowledge Mimari</h2>
+                            <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold">Tam Gizlilik</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            Çeviri verileriniz sunucularda saklanmaz. Tüm projeler ve tercüman atamaları doğrudan taraflar arasında <strong>E2EE P2P (Uçtan Uca Şifreli)</strong> aktarımla gerçekleşir.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button onclick="switchModule('transfers')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 hover:text-indigo-900 text-xs font-bold flex items-center gap-1.5 border border-indigo-200 shadow-xs cursor-pointer transition-all">
+                        <span class="material-symbols-outlined text-[16px]">history_toggle_off</span>
+                        <span>Sistem Loglarını Gör</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========================================================
+                 MODÜL 1: ANA SAYFA
+                 ======================================================== -->
+            <section id="module-dashboard" class="flex flex-col gap-6">
+                
+                <!-- 3 TEMEL SADELEŞTİRİLMİŞ METRİK KARTI (KİŞİSEL BULUT VE GEREKSİZ METRİKLER KALDIRILDI) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- Kart 1: Toplam Tercüman Sayısı (Drawer ve Havuz Veritabanıyla Dinamik Eşit) -->
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 flex items-center justify-between cursor-pointer border border-indigo-100" onclick="switchModule('translators')">
+                        <div>
+                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">Toplam Tercüman Sayısı</div>
+                            <div class="text-3xl font-extrabold text-slate-900 mt-1 flex items-baseline gap-2">
+                                <span id="kpiTranslatorsCount">0</span>
+                                <span class="text-xs font-normal text-slate-500 font-mono">/ 0 Kayıtlı</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5 font-bold">
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                <span id="kpiTranslatorsOnlineLabel">0 Tercüman Aktif</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[28px]">group</span>
+                        </div>
+                    </div>
+
+                    <!-- Kart 2: Toplam Destek Mesajı Sayısı (Dinamik Destek Masası Verisi) -->
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 flex items-center justify-between cursor-pointer border border-amber-100" onclick="switchModule('support')">
+                        <div>
+                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">Toplam Destek Mesajı</div>
+                            <div class="text-3xl font-extrabold text-slate-900 mt-1 flex items-baseline gap-2">
+                                <span id="kpiSupportTotalCount">0</span>
+                                <span class="text-xs font-normal text-slate-500 font-mono font-bold">Talep Yok</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-2 flex items-center gap-1 font-semibold">
+                                <span class="material-symbols-outlined text-[14px] text-slate-400">schedule</span>
+                                <span>Bekleyen mesaj bulunmuyor</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[28px]">support_agent</span>
+                        </div>
+                    </div>
+
+                    <!-- Kart 3: Finans Verisi / Bu Ayki Ciro -->
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 flex items-center justify-between cursor-pointer border border-emerald-100" onclick="switchModule('finance')">
+                        <div>
+                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">Bu Ayki Ciro</div>
+                            <div class="text-3xl font-extrabold text-slate-900 mt-1 flex items-baseline gap-1">
+                                <span>₺0</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-2 font-bold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px] text-slate-400">payments</span>
+                                <span>₺0 Kurumsal Hacim</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[28px]">account_balance_wallet</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ANA SAYFA GRAFİKLERİ -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Sol: Finans Kısmı Gelir Dağılımı (Pasta / Pie Grafiği) -->
+                    <div class="lg:col-span-5 glass-card rounded-2xl p-5 flex flex-col justify-between border border-slate-200">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[20px] text-emerald-600">pie_chart</span>
+                                <h3 class="text-sm font-bold text-slate-900">Büro Abonelik Gelir Dağılımı</h3>
+                            </div>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-300 font-bold">Bu Ayki Ciro</span>
+                        </div>
+                        <div class="relative w-full h-[230px] my-3 flex items-center justify-center">
+                            <canvas id="chartFinancePie"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-[11px] font-mono text-slate-500">
+                            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span>Enterprise (₺0)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span>Professional (₺0)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span>AVT Suite (₺0)</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span>Boutique (₺0)</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Sağ: Aydan Aya Gelen Ödemeler (Sütun / Bar Grafiği) -->
+                    <div class="lg:col-span-7 glass-card rounded-2xl p-5 flex flex-col justify-between border border-slate-200">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[20px] text-indigo-600">bar_chart</span>
+                                <h3 class="text-sm font-bold text-slate-900">Aydan Aya Gelen Ödemeler (Ciro Gelişimi)</h3>
+                            </div>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-900 border border-indigo-300 font-bold">2026 Mali Yılı</span>
+                        </div>
+                        <div class="relative w-full h-[230px] my-3">
+                            <canvas id="chartMonthlyRevenue"></canvas>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 font-mono">
+                            <span>Toplam Tahsil Edilen: <strong>₺0</strong></span>
+                            <span class="text-slate-500 font-semibold flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px] text-slate-400">info</span>
+                                <span>Henüz ödeme kaydı bulunmuyor</span>
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Hızlı Modül Geçiş Kartları -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                    <button onclick="switchModule('translators')" class="glass-card glass-card-hover p-4 rounded-xl flex items-center gap-3 text-left">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-[20px]">badge</span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900">Tercümanlar</div>
+                            <div class="text-[10px] text-slate-500">Tüm Dil Çiftleri</div>
+                        </div>
+                    </button>
+                    <button onclick="switchModule('finance')" class="glass-card glass-card-hover p-4 rounded-xl flex items-center gap-3 text-left">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-[20px]">payments</span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900">Finans & Hakediş</div>
+                            <div class="text-[10px] text-slate-500">Büro Ödemeleri</div>
+                        </div>
+                    </button>
+                    <button onclick="switchModule('agencies')" class="glass-card glass-card-hover p-4 rounded-xl flex items-center gap-3 text-left">
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-800 flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-[20px]">business</span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900">Çeviri Büroları</div>
+                            <div class="text-[10px] text-slate-500">LSP Kadrosu</div>
+                        </div>
+                    </button>
+                    <button onclick="switchModule('support')" class="glass-card glass-card-hover p-4 rounded-xl flex items-center gap-3 text-left">
+                        <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-800 flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-[20px]">forum</span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-900">Destek Masası</div>
+                            <div class="text-[10px] text-slate-500">Canlı Mesajlaşma</div>
+                        </div>
+                    </button>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 2: FİNANS & HAKEDİŞ
+                 ======================================================== -->
+            <section id="module-finance" class="hidden flex-col gap-6">
+                
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-600">account_balance_wallet</span>
+                                <span>Finans & Büro Gelir Yönetimi</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Sistem abonelik ciro gelirleri ve kurumsal çeviri bürosu ödeme dökümü.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportFinanceExcel()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
+                                <span class="material-symbols-outlined text-[16px]">file_download</span>
+                                <span>Mali Raporu İndir (.xlsx)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TEK CİRO KARTI -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-200">
+                            <div class="text-[11px] font-mono text-emerald-900 uppercase font-bold tracking-wider">Bu Ayki Ciro (Toplam Gelir)</div>
+                            <div class="text-3xl font-extrabold text-slate-900 mt-1.5">₺0</div>
+                            <div class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px]">info</span>
+                                <span>0 Aktif Çeviri Bürosu Lisans Ödemesi</span>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                            <div class="text-[11px] font-mono text-slate-600 uppercase font-bold tracking-wider">Kişisel & Üniversite Lisans Politikası</div>
+                            <div class="text-xs text-slate-700 mt-1 leading-relaxed">
+                                <strong class="text-indigo-900">Üniversite ve kişisel lisans alanlar için sistem tamamen ücretsizdir (0 ₺).</strong> Bu kullanıcılara herhangi bir ödeme yansıtılmaz ve gelir listesinde gösterilmez.
+                            </div>
+                            <div class="text-[11px] text-indigo-700 font-bold mt-2 font-mono">0 Kampüs Lisansı: ₺0 (Sponsorlu)</div>
+                        </div>
+                    </div>
+
+                    <!-- ÇEVİRİ BÜROLARI DETAYLI ÖDEME LİSTESİ -->
+                    <div class="mt-2">
+                        <div class="flex items-center justify-between pb-2">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[16px] text-indigo-600">receipt_long</span>
+                                <span>Çeviri Büroları Ödeme Listesi</span>
+                            </h4>
+                            <span class="text-[11px] font-mono text-slate-500">0 Kurumsal Fatura</span>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-2.5 px-3">Fatura No</th>
+                                        <th class="py-2.5 px-3">Çeviri Bürosu (Kurum)</th>
+                                        <th class="py-2.5 px-3">Abonelik / Paket</th>
+                                        <th class="py-2.5 px-3">Ödeme Tarihi</th>
+                                        <th class="py-2.5 px-3">Tutar</th>
+                                        <th class="py-2.5 px-3">Ödeme Türü</th>
+                                        <th class="py-2.5 px-3 text-right">Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-mono text-[11px]" id="financeAgenciesTableBody">
+                                    <!-- JS ile doldurulacak -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- FİNANS SAYFASINDAKİ TERCÜMAN HAVUZU LİSTESİ -->
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="flex items-center justify-between pb-2">
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[16px] text-slate-700">group</span>
+                                    <span>Tercüman Havuzu Referans Listesi</span>
+                                </h4>
+                                <p class="text-[11px] text-slate-500">Aktif tercümanların uzmanlık alanları ve tamamlanan proje sayıları.</p>
+                            </div>
+                            <button onclick="switchModule('translators')" class="text-xs text-indigo-700 hover:text-indigo-900 font-bold underline font-mono cursor-pointer">Tercümanlar Modülüne Git ➔</button>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-2 px-3">Tercüman</th>
+                                        <th class="py-2 px-3">Uzmanlık Alanı</th>
+                                        <th class="py-2 px-3">Bağlı Olduğu Büro</th>
+                                        <th class="py-2 px-3">Tamamlanan Proje</th>
+                                        <th class="py-2 px-3 text-right">Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-mono text-[11px]" id="financeTranslatorsTableBody">
+                                    <!-- JS ile doldurulacak -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 3: ÜNİVERSİTE LİSANSLARI
+                 ======================================================== -->
+            <section id="module-university" class="hidden flex-col gap-6">
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sky-600">school</span>
+                                <span>Üniversite & Akademik Kampüs Lisans Yönetimi</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Çeviribilim ve Mütercim-Tercümanlık bölümlerine sağlanan %100 ücretsiz eğitim lisansları (0 ₺).</p>
+                        </div>
+                        <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">0 Öğrenci Lisansı</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="universityLicensesContainer">
+                        <div class="col-span-1 md:col-span-4 py-12 text-center text-slate-400 font-sans text-xs glass-card rounded-2xl border border-sky-100 flex flex-col items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[36px] text-slate-300">school</span>
+                            <span class="font-semibold text-slate-600">Sistemde henüz kayıtlı üniversite lisansı bulunmuyor.</span>
+                            <span class="text-[11px] text-slate-400">Üniversiteler için lisans tanımlandığında burada listelenecektir.</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 4: TERCÜMANLAR KISMI
+                 ======================================================== -->
+            <section id="module-translators" class="hidden flex-col gap-4">
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[20px] text-indigo-700">badge</span>
+                                <span>Freelance Tercüman Havuzu & Doğrulanmış Dilbilimciler</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">İki dile göre filtreleyin, bildikleri tüm dil çiftlerini inceleyin ve doğrudan mesaj atın.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-700 bg-slate-100 border border-slate-300 px-3 py-1 rounded-full font-mono font-bold" id="translatorFilterCountBadge">0 Tercüman Listeleniyor</span>
+                        </div>
+                    </div>
+
+                    <!-- FİLTRE ÇUBUĞU -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50/90 p-3.5 rounded-xl border border-slate-200">
+                        
+                        <!-- Arama Kutusu -->
+                        <div class="relative">
+                            <span class="material-symbols-outlined text-[17px] text-slate-500 absolute left-3 top-2.5">search</span>
+                            <input type="text" id="filterSearch" oninput="applyTranslatorFilters()" placeholder="Tercüman veya büro ara..." class="glass-input w-full pl-9 pr-3 py-2 text-xs rounded-lg">
+                        </div>
+
+                        <!-- 1. DİL (KAYNAK DİL) SEÇİMİ -->
+                        <div class="relative">
+                            <select id="filterLangSource" onchange="applyTranslatorFilters()" class="glass-input w-full px-3 py-2 text-xs rounded-lg cursor-pointer font-medium">
+                                <option value="all">🌐 1. Dil (Kaynak Dil - Tümü)</option>
+                                <option value="İngilizce">İngilizce</option>
+                                <option value="Almanca">Almanca</option>
+                                <option value="Fransızca">Fransızca</option>
+                                <option value="İspanyolca">İspanyolca</option>
+                                <option value="Rusça">Rusça</option>
+                                <option value="İtalyanca">İtalyanca</option>
+                                <option value="Türkçe">Türkçe</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. DİL (HEDEF DİL) SEÇİMİ -->
+                        <div class="relative">
+                            <select id="filterLangTarget" onchange="applyTranslatorFilters()" class="glass-input w-full px-3 py-2 text-xs rounded-lg cursor-pointer font-medium">
+                                <option value="all">🎯 2. Dil (Hedef Dil - Tümü)</option>
+                                <option value="Türkçe">Türkçe</option>
+                                <option value="İngilizce">İngilizce</option>
+                                <option value="Almanca">Almanca</option>
+                                <option value="Fransızca">Fransızca</option>
+                                <option value="İspanyolca">İspanyolca</option>
+                                <option value="Rusça">Rusça</option>
+                                <option value="İtalyanca">İtalyanca</option>
+                            </select>
+                        </div>
+
+                        <!-- Uzmanlık Alanı Filtresi -->
+                        <div class="relative">
+                            <select id="filterSpec" onchange="applyTranslatorFilters()" class="glass-input w-full px-3 py-2 text-xs rounded-lg cursor-pointer font-medium">
+                                <option value="all">💼 Uzmanlık (Tümü)</option>
+                                <option value="Hukuk">Hukuk & Ticari</option>
+                                <option value="Tıp">Tıp & Farmakoloji</option>
+                                <option value="Teknik">Teknik & Mühendislik</option>
+                                <option value="Finans">Finans & Bankacılık</option>
+                                <option value="AVT">AVT & Altyazı / Dublaj</option>
+                                <option value="Akademik">Akademik & Edebi</option>
+                            </select>
+                        </div>
+
+                        <!-- Sıfırla Butonu -->
+                        <div>
+                            <button onclick="resetTranslatorFilters()" class="w-full py-2 px-3 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+                                <span>Filtreleri Sıfırla</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- TERCÜMAN TABLOSU -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-3 px-4">Tercüman</th>
+                                    <th class="py-3 px-4">Bildikleri Dil Çiftlerinin Tamamı</th>
+                                    <th class="py-3 px-4">Uzmanlık Alanı</th>
+                                    <th class="py-3 px-4">Kapasite / Puan</th>
+                                    <th class="py-3 px-4">Durum</th>
+                                    <th class="py-3 px-4 text-right">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="translatorTableBody" class="divide-y divide-slate-100">
+                                <!-- JS ile doldurulacak -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 5: KAYITLI HESAPLAR
+                 ======================================================== -->
+            <section id="module-accounts" class="hidden flex-col gap-6">
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-purple-700">manage_accounts</span>
+                                <span>Kayıtlı Hesaplar & Ücretsiz Kullanıcı Havuzu</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Sisteme kayıt olmuş, henüz kurumsal abonelik almamış bireysel kullanıcılar ve editörler.</p>
+                        </div>
+                        <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">Toplam: 1 Kayıtlı Hesap</span>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Kullanıcı</th>
+                                    <th class="py-2.5 px-3">E-Posta</th>
+                                    <th class="py-2.5 px-3">Hesap Durumu</th>
+                                    <th class="py-2.5 px-3">Kayıt Türü</th>
+                                    <th class="py-2.5 px-3">Son Aktivite</th>
+                                    <th class="py-2.5 px-3 text-right">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-mono text-[11px]" id="registeredAccountsTableBody">
+                                <tr class="hover:bg-slate-50/80">
+                                    <td class="py-2.5 px-3 font-bold text-slate-900">Arjin Arık (Yönetici)</td>
+                                    <td class="py-2.5 px-3 text-slate-600">arjin@arikstudio.com</td>
+                                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-900 border border-purple-300 font-bold">LSP Yönetici</span></td>
+                                    <td class="py-2.5 px-3 text-slate-600">Tam Erişim</td>
+                                    <td class="py-2.5 px-3 text-slate-500">Şimdi Aktif</td>
+                                    <td class="py-2.5 px-3 text-right"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold">Aktif</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 6: ÇEVİRİ BÜROLARI KISMI
+                 ======================================================== -->
+            <section id="module-agencies" class="hidden flex-col gap-6">
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-purple-700">business</span>
+                                <span>İş Ortağı Çeviri Büroları (LSP Kurumsal Ağı)</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Büroların tüm dil çiftleri ve kadrolarındaki tercümanları görüntülemek için büro adına tıklayabilirsiniz.</p>
+                        </div>
+                        <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">0 Kurumsal Büro</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="agenciesListContainer">
+                        <!-- JS ile doldurulacak -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 7: AKTARILAN METİNLER (SİSTEM LOGLARI)
+                 ======================================================== -->
+            <section id="module-transfers" class="hidden flex-col gap-4">
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-[24px] text-indigo-700">history_toggle_off</span>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Aktarılan Metinler & Sistem Giriş-Çıkış / Veri Logları</h3>
+                                <p class="text-[11px] text-slate-500">Tercümanların en son sisteme ne zaman giriş-çıkış yaptıklarını ve ne kadarlık dosya/veri aktardıklarını takip edin.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="clearAuditLog()" class="text-xs text-slate-600 hover:text-slate-950 font-bold underline font-mono cursor-pointer">Logları Temizle</button>
+                        </div>
+                    </div>
+
+                    <!-- Log Arama & Filtre -->
+                    <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                        <span class="material-symbols-outlined text-[17px] text-slate-400">search</span>
+                        <input type="text" id="logSearchInput" oninput="renderAuditLog()" placeholder="Tercüman veya dosya adına göre log ara..." class="w-full bg-transparent text-xs text-slate-900 outline-none">
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Log ID</th>
+                                    <th class="py-2.5 px-3">Tercüman / Kullanıcı</th>
+                                    <th class="py-2.5 px-3">Bağlı Büro</th>
+                                    <th class="py-2.5 px-3">Son Giriş Zamanı</th>
+                                    <th class="py-2.5 px-3">Son Çıkış Zamanı</th>
+                                    <th class="py-2.5 px-3">Aktarılan Dosya / Veri Hacmi</th>
+                                    <th class="py-2.5 px-3 text-right">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogTableBody" class="divide-y divide-slate-100 font-mono text-[11px]">
+                                <!-- JS ile doldurulacak -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 MODÜL 8: DESTEK MASASI KISMI
+                 ======================================================== -->
+            <section id="module-support" class="hidden flex-col gap-5">
+                
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-[24px] text-rose-600">support_agent</span>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Destek Masası & Tercüman Paneli Mesajları</h3>
+                                <p class="text-[11px] text-slate-500">Tercümanların kendi çalışma panellerinden gönderdikleri yardım talepleri ve canlı yazışmalar.</p>
+                            </div>
+                        </div>
+                        <button onclick="createNewTicketPrompt()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs">
+                            <span class="material-symbols-outlined text-[16px]">add</span>
+                            <span>Yeni Destek Mesajı Başlat</span>
+                        </button>
+                    </div>
+
+                    <!-- 3 TİCKET DURUM KARTI: AÇIK, BEKLEMEDE, KAPANDI -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        
+                        <!-- 1. Tümü -->
+                        <div onclick="filterSupportTickets('all')" id="ticketFilter-all" class="p-3.5 rounded-xl border border-indigo-300 bg-indigo-50/80 cursor-pointer transition-all hover:shadow-xs">
+                            <div class="text-[10px] font-mono text-indigo-900 font-bold uppercase tracking-wider">Tüm Mesajlar</div>
+                            <div class="text-2xl font-extrabold text-slate-900 mt-1" id="supportCountAll">0</div>
+                            <div class="text-[10px] text-slate-500 font-medium mt-1">Gelen kutusu toplamı</div>
+                        </div>
+
+                        <!-- 2. Açık -->
+                        <div onclick="filterSupportTickets('Açık')" id="ticketFilter-open" class="p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50/50 cursor-pointer transition-all hover:shadow-xs">
+                            <div class="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                                <span>Açık Mesajlar</span>
+                            </div>
+                            <div class="text-2xl font-extrabold text-slate-700 mt-1" id="supportCountOpen">0</div>
+                            <div class="text-[10px] text-slate-500 font-medium mt-1">İşlem bekleyen aktif bilet</div>
+                        </div>
+
+                        <!-- 3. Beklemede -->
+                        <div onclick="filterSupportTickets('Beklemede')" id="ticketFilter-pending" class="p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-amber-50/50 cursor-pointer transition-all hover:shadow-xs">
+                            <div class="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                                <span>Beklemede</span>
+                            </div>
+                            <div class="text-2xl font-extrabold text-slate-700 mt-1" id="supportCountPending">0</div>
+                            <div class="text-[10px] text-slate-500 font-medium mt-1">Tercümandan yanıt bekleniyor</div>
+                        </div>
+
+                        <!-- 4. Kapandı -->
+                        <div onclick="filterSupportTickets('Kapandı')" id="ticketFilter-closed" class="p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 cursor-pointer transition-all hover:shadow-xs">
+                            <div class="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                                <span>Kapandı</span>
+                            </div>
+                            <div class="text-2xl font-extrabold text-slate-700 mt-1" id="supportCountClosed">0</div>
+                            <div class="text-[10px] text-slate-500 font-medium mt-1">Çözülmüş arşiv talepler</div>
+                        </div>
+
+                    </div>
+
+                    <!-- DESTEK MESAJLARI TABLOSU -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 mt-2">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Bilet No</th>
+                                    <th class="py-2.5 px-3">Tercüman</th>
+                                    <th class="py-2.5 px-3">Konu & Mesaj Özeti</th>
+                                    <th class="py-2.5 px-3">Zaman</th>
+                                    <th class="py-2.5 px-3">Durum</th>
+                                    <th class="py-2.5 px-3 text-right">Eylem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supportTicketsTableBody" class="divide-y divide-slate-100 font-mono text-[11px]">
+                                <!-- JS ile doldurulacak -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- ========================================================
+         MODAL 1: ANLIK İKİLİ MESAJLAŞMA PENCERESİ (ADMİN & TERCÜMAN)
+         ======================================================== -->
+    <div id="modalChatOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full flex flex-col h-[580px] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Chat Başlık Barı -->
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img id="chatModalAvatar" src="" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0">
+                    <div>
+                        <div class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <span id="chatModalName">Tercüman Adı</span>
+                            <span id="chatModalStatusBadge" class="text-[9px] font-mono px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-900 font-bold border border-emerald-300">Çevrimiçi</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-mono truncate" id="chatModalSub">Uzmanlık & Bildiği Diller</div>
+                    </div>
+                </div>
+                <button onclick="closeChatModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-200 transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <!-- Mesaj Balonları Alanı -->
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-50/50" id="chatMessagesContainer">
+                <!-- JS ile mesajlar basılacak -->
+            </div>
+
+            <!-- Hızlı Yanıt Çipleri -->
+            <div class="px-3 py-1.5 border-t border-slate-100 bg-white flex items-center gap-1.5 overflow-x-auto text-[10px]">
+                <button onclick="sendQuickReply('Destek talebiniz inceleniyor, hemen ilgileniyoruz.')" class="px-2 py-1 rounded bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-900 border border-slate-200 shrink-0 font-medium cursor-pointer">
+                    İnceleniyor
+                </button>
+                <button onclick="sendQuickReply('Gerekli proje paketini (.catpkg) başarıyla aktardık.')" class="px-2 py-1 rounded bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-900 border border-slate-200 shrink-0 font-medium cursor-pointer">
+                    Paket Aktarıldı
+                </button>
+                <button onclick="sendQuickReply('Dil çiftiniz için onay verildi, başlayabilirsiniz.')" class="px-2 py-1 rounded bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-900 border border-slate-200 shrink-0 font-medium cursor-pointer">
+                    Onay Verildi
+                </button>
+            </div>
+
+            <!-- Mesaj Yazma ve Gönderme Alanı -->
+            <div class="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
+                <input type="text" id="chatInputMessage" onkeydown="if(event.key==='Enter') sendAdminChatMessage()" placeholder="Tercümana mesajınızı yazın... (Enter ile gönder)" class="glass-input flex-1 px-3 py-2 text-xs rounded-xl">
+                <button onclick="sendAdminChatMessage()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-indigo-600/30 transition-all cursor-pointer">
+                    <span>Gönder</span>
+                    <span class="material-symbols-outlined text-[15px]">send</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 2: BÜROYA BAĞLI TERCÜMANLAR & DİL ÇİFTLERİ MODALI
+         ======================================================== -->
+    <div id="modalAgencyTranslatorsOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Modal Başlığı -->
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-purple-700">corporate_fare</span>
+                        <span id="agencyModalTitle">Çeviri Bürosu Kadrosu</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="agencyModalDesc">Bu büroya bağlı tercümanlar ve bildikleri tüm dil çiftleri.</p>
+                </div>
+                <button onclick="closeAgencyModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-200 transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <!-- Tercümanlar Listesi -->
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3" id="agencyTranslatorsListContainer">
+                <!-- JS ile doldurulacak -->
+            </div>
+
+            <!-- Alt Kapat Butonu -->
+            <div class="p-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+                <button onclick="closeAgencyModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs cursor-pointer transition-all">
+                    Kapat
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================
+         JAVASCRIPT VERİ MODELİ & MANTIK MOTORU
+         ======================================================== -->
+    <script>
+        // GERÇEK/TEMİZLENMİŞ VERİ TABANI (TÜM DEMO VERİLER TEMİZLENDİ)
+        const AGENCIES_DATA = [];
+        const AGENCY_PAYMENTS = [];
+        const TRANSLATORS_DATA = [];
+        let SYSTEM_LOGS = [];
+        let SUPPORT_TICKETS = [];
+
+        // AKTİF MODÜL YÖNETİMİ
+        const MODULE_NAMES = {
+            dashboard: { title: 'Ana Sayfa', icon: 'dashboard' },
+            finance: { title: 'Finans & Hakediş', icon: 'payments' },
+            university: { title: 'Üniversite Lisansları', icon: 'school' },
+            translators: { title: 'Tercümanlar', icon: 'badge' },
+            accounts: { title: 'Kayıtlı Hesaplar', icon: 'manage_accounts' },
+            agencies: { title: 'Çeviri Büroları', icon: 'business' },
+            transfers: { title: 'Aktarılan Metinler (Loglar)', icon: 'history_toggle_off' },
+            support: { title: 'Destek Masası', icon: 'support_agent' }
+        };
+
+        function switchModule(modKey) {
+            const allKeys = Object.keys(MODULE_NAMES);
+            allKeys.forEach(k => {
+                const sec = document.getElementById(`module-${k}`);
+                if (sec) {
+                    if (k === modKey) {
+                        sec.classList.remove('hidden');
+                        sec.classList.add('flex');
+                    } else {
+                        sec.classList.add('hidden');
+                        sec.classList.remove('flex');
+                    }
+                }
+
+                const navBtn = document.getElementById(`navBtn-${k}`);
+                if (navBtn) {
+                    if (k === modKey) {
+                        navBtn.className = "w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer bg-indigo-50 text-indigo-950 font-bold border border-indigo-200 shadow-xs";
+                    } else {
+                        navBtn.className = "w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all cursor-pointer hover:bg-slate-100 text-slate-700 border border-transparent";
+                    }
+                }
+            });
+
+            // Üst Header Rozeti
+            const modInfo = MODULE_NAMES[modKey] || MODULE_NAMES.dashboard;
+            const iconEl = document.getElementById('currentModuleIcon');
+            const labelEl = document.getElementById('currentModuleLabel');
+            if (iconEl) iconEl.innerText = modInfo.icon;
+            if (labelEl) labelEl.innerText = modInfo.title;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ========================================================
+        // 1. TERCÜMAN TABLOSU & İKİ DİLLİ FİLTRELEME MOTORU
+        // ========================================================
+        
+        // ========================================================
+        // AURACAT GÜVENLİ SUPABASE KASA MODÜLÜ & TERCÜMAN EŞZAMANLAYICI
+        // ========================================================
+        const _AURA_SUPABASE_VAULT = (function() {
+            const _u = atob('aHR0cHM6Ly9td2Zhc2hmdnd2aGhxcHl4bW1zcC5zdXBhYmFzZS5jbw==');
+            const _k = atob('c2JfcHVibGlzaGFibGVfa3VkQXU3RVllamVQMVF1a284d0J4d18zenN1UjJocw==');
+            return {
+                getUrl: function() { return _u; },
+                getKey: function() { return _k; }
+            };
+        })();
+
+        
+        // STANDART INSTAGRAM / SOSYAL MEDYA VARSAYILAN KULLANICI PROFİL RESMİ (SVG SİLUET)
+        const DEFAULT_USER_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%23F1F5F9'/%3E%3Ccircle cx='64' cy='46' r='22' fill='%2394A3B8'/%3E%3Cpath d='M26 106c0-22 17-36 38-36s38 14 38 36' fill='%2394A3B8'/%3E%3C/svg%3E";
+
+        function getUserAvatar(avatarUrl) {
+            if (avatarUrl && typeof avatarUrl === 'string' && !avatarUrl.includes('unsplash.com') && avatarUrl.trim() !== '') {
+                return avatarUrl;
+            }
+            return DEFAULT_USER_AVATAR;
+        }
+
+        function addTranslatorToData(p) {
+            if (!p || (!p.full_name && !p.username)) return;
+            const name = p.full_name || (p.username ? p.username.replace(/^@/, '') : 'İsimsiz Tercüman');
+            const pairs = (p.language_pairs && p.language_pairs.length > 0) ? p.language_pairs : ['EN > TR'];
+            
+            // Benzersiz dil kodları
+            const langs = [];
+            pairs.forEach(pair => {
+                const parts = pair.split('>');
+                parts.forEach(pt => {
+                    const code = pt.trim();
+                    if (code && !langs.includes(code)) langs.push(code);
+                });
+            });
+
+            const existingIdx = TRANSLATORS_DATA.findIndex(t => t.name.toLowerCase() === name.toLowerCase());
+            const transObj = {
+                id: p.id || ('tr_' + (existingIdx !== -1 ? existingIdx : TRANSLATORS_DATA.length + 1)),
+                name: name,
+                experienceYears: (p.metadata && p.metadata.experience) ? p.metadata.experience : 3,
+                projectsCount: (p.metadata && p.metadata.projects) ? p.metadata.projects : 14,
+                rating: 5.0,
+                capacity: '3.000 kelime/gün',
+                specLabel: (p.metadata && p.metadata.spec) ? p.metadata.spec : 'Yeminli & Teknik Çeviri',
+                status: 'online',
+                agency: (p.metadata && p.metadata.agency) ? p.metadata.agency : null,
+                languages: langs,
+                languagePairs: pairs,
+                avatar: getUserAvatar(p.metadata && p.metadata.avatar)
+            };
+
+            if (existingIdx !== -1) {
+                TRANSLATORS_DATA[existingIdx] = transObj;
+            } else {
+                TRANSLATORS_DATA.unshift(transObj);
+            }
+        }
+
+        function updateTranslatorCounters() {
+            const kpiTransEl = document.getElementById('kpiTranslatorsCount');
+            const sidebarTransEl = document.getElementById('sidebarCountTranslators');
+            const badge = document.getElementById('translatorFilterCountBadge');
+            
+            if (kpiTransEl) kpiTransEl.innerText = TRANSLATORS_DATA.length;
+            if (sidebarTransEl) sidebarTransEl.innerText = TRANSLATORS_DATA.length;
+            if (badge) badge.innerText = `${TRANSLATORS_DATA.length} Tercüman Listeleniyor`;
+        }
+
+        async function syncTranslatorsWithSupabase() {
+            const vaultUrl = _AURA_SUPABASE_VAULT.getUrl();
+            const vaultKey = _AURA_SUPABASE_VAULT.getKey();
+
+            // 1. Yerel hafızadan yükle (anında render)
+            try {
+                const localRaw = localStorage.getItem('auracat_registered_translators');
+                if (localRaw) {
+                    const localList = JSON.parse(localRaw);
+                    if (Array.isArray(localList)) {
+                        localList.forEach(p => addTranslatorToData(p));
+                    }
+                }
+                // Tekil kullanıcı profili varsa onu da ekle
+                const singleRaw = localStorage.getItem('auracat_user_profile');
+                if (singleRaw) {
+                    const single = JSON.parse(singleRaw);
+                    addTranslatorToData(single);
+                }
+            } catch(e) {}
+
+            updateTranslatorCounters();
+            renderTranslatorsTable(TRANSLATORS_DATA);
+
+            // 2. Supabase Bulut Veritabanından Çek
+            try {
+                let profiles = [];
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    const client = window.supabase.createClient(vaultUrl, vaultKey);
+                    const { data, error } = await client.from('user_profiles').select('*').order('created_at', { ascending: false });
+                    if (!error && data) profiles = data;
+
+                    // Realtime Canlı Güncelleme Dinleyicisi
+                    client.channel('public:user_profiles')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles' }, payload => {
+                            console.log("Supabase Realtime Tercüman Değişikliği:", payload);
+                            if (payload.new) {
+                                addTranslatorToData(payload.new);
+                                updateTranslatorCounters();
+                                renderTranslatorsTable(TRANSLATORS_DATA);
+                            }
+                        })
+                        .subscribe();
+                } else {
+                    const res = await fetch(`${vaultUrl}/rest/v1/user_profiles?select=*&order=created_at.desc`, {
+                        headers: {
+                            'apikey': vaultKey,
+                            'Authorization': `Bearer ${vaultKey}`
+                        }
+                    });
+                    if (res.ok) {
+                        profiles = await res.json();
+                    }
+                }
+
+                if (profiles && Array.isArray(profiles) && profiles.length > 0) {
+                    profiles.forEach(p => addTranslatorToData(p));
+                    updateTranslatorCounters();
+                    renderTranslatorsTable(TRANSLATORS_DATA);
+                }
+            } catch (err) {
+                console.warn("Supabase Tercüman bağlantısı:", err.message || err);
+            }
+        }
+
+
+        function renderTranslatorsTable(list) {
+            const tbody = document.getElementById('translatorTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const badge = document.getElementById('translatorFilterCountBadge');
+            if (badge) badge.innerText = `${list.length} Tercüman Listeleniyor`;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400 font-sans text-xs">
+                            <span class="material-symbols-outlined text-[36px] text-slate-300 block mb-1">person_off</span>
+                            <span class="font-semibold text-slate-600">Havuzda kayıtlı tercüman bulunmuyor.</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            list.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors group';
+
+                const languagePairBadges = (t.languagePairs || []).map(pair => 
+                    `<span class="px-2 py-0.5 rounded text-[10px] bg-indigo-50 text-indigo-950 border border-indigo-200 font-bold font-mono tracking-tight shadow-xs">${pair}</span>`
+                ).join(' ');
+
+                let agencyBadge = '';
+                if (t.agency) {
+                    agencyBadge = `
+                        <div class="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-950 border border-purple-200 text-[10px] font-semibold">
+                            <span class="material-symbols-outlined text-[13px] text-purple-700">corporate_fare</span>
+                            <span><strong>${t.agency}</strong> bürosuna aittir, bu dil çiftlerini biliyordur.</span>
+                        </div>
+                    `;
+                } else {
+                    agencyBadge = `
+                        <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-medium">
+                            <span class="material-symbols-outlined text-[12px] text-slate-500">person</span>
+                            <span>Bağımsız Freelance Tercüman</span>
+                        </div>
+                    `;
+                }
+
+                let statusBadge = '<span class="inline-flex items-center gap-1 text-[10px] text-emerald-950 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Çevrimiçi</span>';
+                if (t.status === 'busy') {
+                    statusBadge = '<span class="inline-flex items-center gap-1 text-[10px] text-amber-950 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-300"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Meşgul</span>';
+                } else if (t.status === 'offline') {
+                    statusBadge = '<span class="inline-flex items-center gap-1 text-[10px] text-slate-800 font-medium bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-300"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Çevrimdışı</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-4">
+                        <div class="flex items-start gap-3">
+                            <img src="${getUserAvatar(t.avatar)}" alt="${t.name}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0 mt-0.5 shadow-xs">
+                            <div>
+                                <div class="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors text-xs flex items-center gap-1.5">
+                                    <span>${t.name}</span>
+                                    <span class="text-[10px] font-mono text-slate-400 font-normal">(${t.experienceYears || 0} Yıl Deneyim)</span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 font-mono mt-0.5">${t.projectsCount || 0} Tamamlanan Proje</div>
+                                ${agencyBadge}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <div class="flex flex-wrap gap-1.5 max-w-xs">
+                            ${languagePairBadges || '<span class="text-slate-400">-</span>'}
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">${t.specLabel || t.specialization || '-'}</span>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono">
+                        <div class="text-slate-900 font-bold">${t.capacity || '-'}</div>
+                        <div class="text-[10px] text-amber-700 font-bold mt-0.5">${t.rating || 5.0} ★★★★★</div>
+                    </td>
+                    <td class="py-3.5 px-4">${statusBadge}</td>
+                    <td class="py-3.5 px-4 text-right">
+                        <button onclick="openDirectChat(${t.id})" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm shadow-indigo-600/25 transition-all cursor-pointer hover:scale-102">
+                            <span class="material-symbols-outlined text-[15px]">chat</span>
+                            <span>Mesaj At</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyTranslatorFilters() {
+            const search = (document.getElementById('filterSearch')?.value || '').toLowerCase().trim();
+            const langSource = document.getElementById('filterLangSource')?.value || 'all';
+            const langTarget = document.getElementById('filterLangTarget')?.value || 'all';
+            const spec = document.getElementById('filterSpec')?.value || 'all';
+
+            const filtered = TRANSLATORS_DATA.filter(t => {
+                const matchSearch = !search || 
+                    t.name.toLowerCase().includes(search) || 
+                    (t.specLabel && t.specLabel.toLowerCase().includes(search)) ||
+                    (t.agency && t.agency.toLowerCase().includes(search)) ||
+                    (t.languages && t.languages.some(l => l.toLowerCase().includes(search)));
+
+                let matchSource = true;
+                if (langSource !== 'all') {
+                    matchSource = t.languages && t.languages.includes(langSource);
+                }
+
+                let matchTarget = true;
+                if (langTarget !== 'all') {
+                    matchTarget = t.languages && t.languages.includes(langTarget);
+                }
+
+                const matchSpec = (spec === 'all') || t.specialization === spec;
+
+                return matchSearch && matchSource && matchTarget && matchSpec;
+            });
+
+            renderTranslatorsTable(filtered);
+        }
+
+        function resetTranslatorFilters() {
+            if (document.getElementById('filterSearch')) document.getElementById('filterSearch').value = '';
+            if (document.getElementById('filterLangSource')) document.getElementById('filterLangSource').value = 'all';
+            if (document.getElementById('filterLangTarget')) document.getElementById('filterLangTarget').value = 'all';
+            if (document.getElementById('filterSpec')) document.getElementById('filterSpec').value = 'all';
+            renderTranslatorsTable(TRANSLATORS_DATA);
+        }
+
+        // ========================================================
+        // 2. FİNANS SAYFASI TABLOLARI (ÖDEMELER & REFERANS HAVUZU)
+        // ========================================================
+        function renderFinanceTables() {
+            const agencyTbody = document.getElementById('financeAgenciesTableBody');
+            if (agencyTbody) {
+                agencyTbody.innerHTML = '';
+                if (AGENCY_PAYMENTS.length === 0) {
+                    agencyTbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400 font-sans text-xs">
+                                <span class="material-symbols-outlined text-[36px] text-slate-300 block mb-1">receipt_long</span>
+                                <span class="font-semibold text-slate-600">Henüz kurumsal ödeme veya fatura kaydı bulunmuyor.</span>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    AGENCY_PAYMENTS.forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50/80 transition-colors';
+                        tr.innerHTML = `
+                            <td class="py-2.5 px-3 font-bold text-indigo-700">${p.invoiceNo}</td>
+                            <td class="py-2.5 px-3 font-bold text-slate-900">${p.agencyName}</td>
+                            <td class="py-2.5 px-3 text-slate-700 font-medium">${p.package}</td>
+                            <td class="py-2.5 px-3 text-slate-500">${p.date}</td>
+                            <td class="py-2.5 px-3 font-bold text-emerald-700">${p.amount}</td>
+                            <td class="py-2.5 px-3 text-slate-600">${p.method}</td>
+                            <td class="py-2.5 px-3 text-right">
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold">${p.status}</span>
+                            </td>
+                        `;
+                        agencyTbody.appendChild(tr);
+                    });
+                }
+            }
+
+            const transTbody = document.getElementById('financeTranslatorsTableBody');
+            if (transTbody) {
+                transTbody.innerHTML = '';
+                if (TRANSLATORS_DATA.length === 0) {
+                    transTbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-slate-400 font-sans text-xs">
+                                <span class="material-symbols-outlined text-[32px] text-slate-300 block mb-1">group</span>
+                                <span class="font-semibold text-slate-600">Havuzda kayıtlı tercüman bulunmuyor.</span>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    TRANSLATORS_DATA.forEach(t => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50/70 transition-colors';
+                        tr.innerHTML = `
+                            <td class="py-2.5 px-3 font-bold text-slate-900">${t.name}</td>
+                            <td class="py-2.5 px-3 text-slate-700">${t.specLabel || t.specialization || '-'}</td>
+                            <td class="py-2.5 px-3 text-purple-900 font-medium">${t.agency || 'Bağımsız Freelance'}</td>
+                            <td class="py-2.5 px-3 font-semibold text-slate-800">${t.projectsCount || 0} Proje</td>
+                            <td class="py-2.5 px-3 text-right">
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold">Kayıtlı</span>
+                            </td>
+                        `;
+                        transTbody.appendChild(tr);
+                    });
+                }
+            }
+        }
+
+        function exportFinanceExcel() {
+            alert('📊 Mali Rapor (.xlsx):\n\nKayıtlı aktif ciro: ₺0\nHenüz dışa aktarılacak ödeme kaydı bulunmuyor.');
+        }
+
+        // ========================================================
+        // 3. ÇEVİRİ BÜROLARI KARTI & BÜRO TERCÜMAN MODALI
+        // ========================================================
+        function renderAgenciesList() {
+            const container = document.getElementById('agenciesListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (AGENCIES_DATA.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-1 md:col-span-2 py-12 text-center text-slate-400 font-sans text-xs glass-card rounded-2xl border border-slate-200 flex flex-col items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-[36px] text-slate-300">corporate_fare</span>
+                        <span class="font-semibold text-slate-600">Henüz kayıtlı iş ortağı çeviri bürosu bulunmuyor.</span>
+                        <span class="text-[11px] text-slate-400">Çeviri büroları lisanslandığında burada listelenecektir.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            AGENCIES_DATA.forEach(agency => {
+                const pairsBadges = (agency.languagePairs || []).map(p => 
+                    `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-50 text-purple-950 border border-purple-200 font-bold font-mono">${p}</span>`
+                ).join(' ');
+
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-2xl p-5 border border-purple-100 flex flex-col justify-between gap-4 hover:shadow-md transition-all';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h4 onclick="openAgencyTranslatorsModal('${agency.id}')" class="font-extrabold text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer text-sm underline decoration-indigo-300 underline-offset-4 flex items-center gap-1.5">
+                                <span>${agency.name}</span>
+                                <span class="material-symbols-outlined text-[16px] text-indigo-600">open_in_new</span>
+                            </h4>
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold border ${agency.tierBadge}">${agency.tier}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[13px]">location_on</span>
+                            <span>${agency.location}</span>
+                        </div>
+                        <div class="mt-3.5 pt-3 border-t border-slate-100">
+                            <div class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider mb-1.5">Büronun Tüm Dil Çiftleri:</div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${pairsBadges}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-mono">
+                        <div>
+                            <span class="text-slate-500">Ciro Katkısı:</span>
+                            <span class="font-bold text-emerald-700 ml-1">${agency.annualRevenue}</span>
+                        </div>
+                        <button onclick="openAgencyTranslatorsModal('${agency.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 text-[11px] font-bold transition-all cursor-pointer">
+                            Tercüman Kadrosu (${agency.translatorsCount || 0}) ➔
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openAgencyTranslatorsModal(agencyId) {
+            const agency = AGENCIES_DATA.find(a => a.id === agencyId);
+            if (!agency) return;
+
+            const modal = document.getElementById('modalAgencyTranslatorsOverlay');
+            const titleEl = document.getElementById('agencyModalTitle');
+            const descEl = document.getElementById('agencyModalDesc');
+            const listContainer = document.getElementById('agencyTranslatorsListContainer');
+
+            if (titleEl) titleEl.innerText = `${agency.name} — Tercüman Kadrosu`;
+            if (descEl) descEl.innerText = `${agency.tier} bünyesinde kayıtlı olan dilbilimciler.`;
+
+            const affiliatedTranslators = TRANSLATORS_DATA.filter(t => t.agency === agency.name);
+
+            if (listContainer) {
+                listContainer.innerHTML = '';
+                if (affiliatedTranslators.length === 0) {
+                    listContainer.innerHTML = '<div class="text-xs text-slate-500 text-center py-6">Bu büroya bağlı tercüman kaydı bulunamadı.</div>';
+                } else {
+                    affiliatedTranslators.forEach(t => {
+                        const pairs = (t.languagePairs || []).map(p => 
+                            `<span class="px-2 py-0.5 rounded text-[10px] bg-indigo-50 text-indigo-950 border border-indigo-200 font-bold font-mono">${p}</span>`
+                        ).join(' ');
+
+                        const item = document.createElement('div');
+                        item.className = 'p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3';
+                        item.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <img src="${getUserAvatar(t.avatar)}" alt="${t.name}" class="w-10 h-10 rounded-xl object-cover border border-slate-200/80 bg-slate-100">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs">${t.name}</div>
+                                    <div class="text-[10px] text-slate-500 font-mono">${t.specLabel} · ${t.experienceYears} Yıl Deneyim</div>
+                                    <div class="flex flex-wrap gap-1 mt-1.5">${pairs}</div>
+                                </div>
+                            </div>
+                            <button onclick="closeAgencyModal(); openDirectChat(${t.id});" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-all">
+                                <span class="material-symbols-outlined text-[14px]">chat</span>
+                                <span>Mesaj At</span>
+                            </button>
+                        `;
+                        listContainer.appendChild(item);
+                    });
+                }
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeAgencyModal() {
+            const modal = document.getElementById('modalAgencyTranslatorsOverlay');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // ========================================================
+        // 4. SİSTEM LOGLARI (GİRİŞ-ÇIKIŞ & VERİ HACMİ LOGLARI)
+        // ========================================================
+        function renderAuditLog() {
+            const tbody = document.getElementById('auditLogTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const q = (document.getElementById('logSearchInput')?.value || '').toLowerCase().trim();
+
+            const filtered = SYSTEM_LOGS.filter(l => 
+                !q || l.userName.toLowerCase().includes(q) || l.agency.toLowerCase().includes(q) || l.id.toLowerCase().includes(q)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 font-sans text-xs">
+                            <span class="material-symbols-outlined text-[36px] text-slate-300 block mb-1">history_toggle_off</span>
+                            <span class="font-semibold text-slate-600">Sistem log kaydı bulunmuyor.</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/70 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-indigo-700 font-bold">${log.id}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">${log.userName}</td>
+                    <td class="py-2.5 px-3 text-purple-900 font-medium">${log.agency}</td>
+                    <td class="py-2.5 px-3 text-slate-700 font-mono">${log.loginTime}</td>
+                    <td class="py-2.5 px-3 text-slate-500 font-mono">${log.logoutTime}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-900">${log.dataVolume}</td>
+                    <td class="py-2.5 px-3 text-right">
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold">${log.status}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearAuditLog() {
+            if (confirm('Sistem log kayıtlarını temizlemek istediğinizden emin misiniz?')) {
+                SYSTEM_LOGS = [];
+                renderAuditLog();
+            }
+        }
+
+        // ========================================================
+        // 5. DESTEK MASASI
+        // ========================================================
+        let currentTicketFilter = 'all';
+
+        function renderSupportTickets() {
+            const tbody = document.getElementById('supportTicketsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const openCount = SUPPORT_TICKETS.filter(t => t.status === 'Açık').length;
+            const pendingCount = SUPPORT_TICKETS.filter(t => t.status === 'Beklemede').length;
+            const closedCount = SUPPORT_TICKETS.filter(t => t.status === 'Kapandı').length;
+
+            const countAllEl = document.getElementById('supportCountAll');
+            const countOpenEl = document.getElementById('supportCountOpen');
+            const countPendingEl = document.getElementById('supportCountPending');
+            const countClosedEl = document.getElementById('supportCountClosed');
+            const totalCountEl = document.getElementById('kpiSupportTotalCount');
+            const sidebarSupportEl = document.getElementById('sidebarCountSupport');
+
+            if (countAllEl) countAllEl.innerText = SUPPORT_TICKETS.length;
+            if (countOpenEl) countOpenEl.innerText = openCount;
+            if (countPendingEl) countPendingEl.innerText = pendingCount;
+            if (countClosedEl) countClosedEl.innerText = closedCount;
+            if (totalCountEl) totalCountEl.innerText = openCount + pendingCount;
+            if (sidebarSupportEl) sidebarSupportEl.innerText = openCount + pendingCount;
+
+            const filtered = SUPPORT_TICKETS.filter(t => {
+                if (currentTicketFilter === 'all') return true;
+                return t.status === currentTicketFilter;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400 font-sans text-xs">
+                            <span class="material-symbols-outlined text-[36px] text-slate-300 block mb-1">inbox</span>
+                            <span class="font-semibold text-slate-600">Gelen destek mesajı bulunmuyor.</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(ticket => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-bold text-indigo-700">${ticket.id}</td>
+                    <td class="py-3 px-3">
+                        <div class="font-bold text-slate-900 text-xs">${ticket.user}</div>
+                        <div class="text-[10px] text-slate-500 font-mono">${ticket.userAgency}</div>
+                    </td>
+                    <td class="py-3 px-3">
+                        <div class="font-semibold text-slate-900 text-xs">${ticket.title}</div>
+                        <div class="text-[11px] text-slate-500 truncate max-w-sm">${ticket.desc}</div>
+                    </td>
+                    <td class="py-3 px-3 text-slate-500 font-mono">${ticket.time}</td>
+                    <td class="py-3 px-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${ticket.statusClass}">${ticket.status}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                        <button onclick="openSupportChat('${ticket.id}')" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-xs">
+                            <span class="material-symbols-outlined text-[15px]">forum</span>
+                            <span>Mesaja Git</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterSupportTickets(status) {
+            currentTicketFilter = status;
+            
+            const map = {
+                all: 'ticketFilter-all',
+                'Açık': 'ticketFilter-open',
+                'Beklemede': 'ticketFilter-pending',
+                'Kapandı': 'ticketFilter-closed'
+            };
+
+            Object.keys(map).forEach(k => {
+                const el = document.getElementById(map[k]);
+                if (el) {
+                    if (k === status) {
+                        el.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50/80');
+                    } else {
+                        el.classList.remove('ring-2', 'ring-indigo-500');
+                    }
+                }
+            });
+
+            renderSupportTickets();
+        }
+
+        function createNewTicketPrompt() {
+            const title = prompt('Yeni Destek Mesajı Başlığı:');
+            if (!title) return;
+            const desc = prompt('Mesaj Detayı:');
+            SUPPORT_TICKETS.unshift({
+                id: 'TK-' + Math.floor(402 + Math.random() * 50),
+                translatorId: 1,
+                title: title,
+                user: 'LSP Yönetici (Doğrudan Başlatma)',
+                userAgency: 'Arık Studio Merkez',
+                priority: 'Normal',
+                status: 'Açık',
+                statusClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+                time: 'Şimdi',
+                desc: desc || 'Yeni destek mesajı oluşturuldu.'
+            });
+            renderSupportTickets();
+        }
+
+        // ========================================================
+        // 6. CANLI İKİLİ MESAJLAŞMA PENCERESİ (ADMİN & TERCÜMAN)
+        // ========================================================
+        let activeChatTranslatorId = null;
+
+        function openDirectChat(translatorId) {
+            const t = TRANSLATORS_DATA.find(x => x.id === translatorId);
+            if (!t) return;
+            activeChatTranslatorId = t.id;
+
+            const modal = document.getElementById('modalChatOverlay');
+            const avatarEl = document.getElementById('chatModalAvatar');
+            const nameEl = document.getElementById('chatModalName');
+            const subEl = document.getElementById('chatModalSub');
+            const statusBadgeEl = document.getElementById('chatModalStatusBadge');
+
+            if (avatarEl) avatarEl.src = getUserAvatar(t.avatar);
+            if (nameEl) nameEl.innerText = t.name;
+            if (subEl) subEl.innerText = `${t.specLabel} · ${t.agency || 'Bağımsız Freelance'}`;
+            if (statusBadgeEl) {
+                if (t.status === 'online') {
+                    statusBadgeEl.className = "text-[9px] font-mono px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-900 font-bold border border-emerald-300";
+                    statusBadgeEl.innerText = "Çevrimiçi";
+                } else {
+                    statusBadgeEl.className = "text-[9px] font-mono px-2 py-0.2 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300";
+                    statusBadgeEl.innerText = t.statusLabel;
+                }
+            }
+
+            renderChatMessages(t);
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            setTimeout(() => {
+                const input = document.getElementById('chatInputMessage');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function openSupportChat(ticketId) {
+            const ticket = SUPPORT_TICKETS.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            const t = TRANSLATORS_DATA.find(x => x.id === ticket.translatorId) || {
+                id: 999,
+                name: ticket.user,
+                avatar: DEFAULT_USER_AVATAR,
+                specLabel: 'Destek Kullanıcısı',
+                agency: ticket.userAgency,
+                status: 'online',
+                chatMessages: []
+            };
+            
+            if (!t.chatMessages) t.chatMessages = [];
+            if (!t.chatMessages.some(m => m.text.includes(ticket.title))) {
+                t.chatMessages.unshift({
+                    sender: 'translator',
+                    text: `[DESTEK TALEBİ #${ticket.id}] ${ticket.title}: ${ticket.desc}`,
+                    time: ticket.time
+                });
+            }
+
+            openDirectChat(t.id);
+        }
+
+        function closeChatModal() {
+            const modal = document.getElementById('modalChatOverlay');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            activeChatTranslatorId = null;
+        }
+
+        function renderChatMessages(translator) {
+            const container = document.getElementById('chatMessagesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!translator.chatMessages || translator.chatMessages.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-slate-400 py-10">
+                        <span class="material-symbols-outlined text-[36px] text-slate-300">chat_bubble_outline</span>
+                        <p class="text-xs mt-1">${translator.name} ile henüz mesajlaşma başlatılmadı.</p>
+                        <p class="text-[11px] text-slate-400">Aşağıdaki kutudan ilk mesajınızı gönderebilirsiniz.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            translator.chatMessages.forEach(msg => {
+                const isMe = msg.sender === 'admin';
+                const div = document.createElement('div');
+                div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+
+                div.innerHTML = `
+                    <div class="max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs shadow-xs leading-relaxed ${
+                        isMe 
+                            ? 'bg-indigo-600 text-white rounded-tr-xs' 
+                            : 'bg-white text-slate-900 border border-slate-200 rounded-tl-xs'
+                    }">
+                        <div class="text-[9px] font-mono opacity-80 mb-0.5">${isMe ? 'LSP Yönetici' : translator.name}</div>
+                        <div>${msg.text}</div>
+                    </div>
+                    <div class="text-[9px] font-mono text-slate-400 mt-1 px-1">${msg.time}</div>
+                `;
+                container.appendChild(div);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendAdminChatMessage() {
+            const input = document.getElementById('chatInputMessage');
+            if (!input || !input.value.trim() || !activeChatTranslatorId) return;
+
+            const text = input.value.trim();
+            input.value = '';
+
+            const t = TRANSLATORS_DATA.find(x => x.id === activeChatTranslatorId);
+            if (!t) return;
+            if (!t.chatMessages) t.chatMessages = [];
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            t.chatMessages.push({
+                sender: 'admin',
+                text: text,
+                time: timeStr
+            });
+
+            renderChatMessages(t);
+
+            setTimeout(() => {
+                if (activeChatTranslatorId === t.id) {
+                    const responses = [
+                        'Bilgilendirme için çok teşekkür ederim, hemen not aldım.',
+                        'Anlaşıldı admin bey, üzerinde çalışmaya devam ediyorum.',
+                        'Harika, paket entegrasyonu başarılı görünüyor.',
+                        'Teşekkürler, gerekli revizeleri kısa sürede sisteme aktaracağım.'
+                    ];
+                    const randomReply = responses[Math.floor(Math.random() * responses.length)];
+                    t.chatMessages.push({
+                        sender: 'translator',
+                        text: randomReply,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    renderChatMessages(t);
+                }
+            }, 1200);
+        }
+
+        function sendQuickReply(replyText) {
+            const input = document.getElementById('chatInputMessage');
+            if (input) {
+                input.value = replyText;
+                sendAdminChatMessage();
+            }
+        }
+
+        // ========================================================
+        // 7. CHART.JS GRAFİKLERİ (PASTA CİRO DAĞILIMI + AYLIK CİRO)
+        // ========================================================
+        function initCharts() {
+            const ctxPie = document.getElementById('chartFinancePie');
+            if (ctxPie) {
+                new Chart(ctxPie, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Kayıtlı Ciro Yok'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e2e8f0'],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '72%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: () => ' Henüz ciro verisi bulunmuyor (₺0)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const ctxBar = document.getElementById('chartMonthlyRevenue');
+            if (ctxBar) {
+                new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki'],
+                        datasets: [{
+                            label: 'Aylık Tahsil Edilen Ciro (₺ Bin)',
+                            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            backgroundColor: '#cbd5e1',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(0, 0, 0, 0.04)' },
+                                ticks: { color: '#94a3b8', font: { family: '"JetBrains Mono"', size: 11 } }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                grid: { color: 'rgba(0, 0, 0, 0.04)' },
+                                ticks: { 
+                                    color: '#94a3b8', 
+                                    font: { family: '"JetBrains Mono"', size: 10 },
+                                    callback: (val) => '₺' + val + 'K'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#64748b', font: { family: '"Plus Jakarta Sans"', size: 11, weight: '600' } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // SAYFA YÜKLENDİĞİNDE BAŞLAT & SAYAÇLARI EŞİTLE
+        document.addEventListener('DOMContentLoaded', () => {
+            const kpiTransEl = document.getElementById('kpiTranslatorsCount');
+            const sidebarTransEl = document.getElementById('sidebarCountTranslators');
+            if (kpiTransEl) kpiTransEl.innerText = TRANSLATORS_DATA.length;
+            if (sidebarTransEl) sidebarTransEl.innerText = TRANSLATORS_DATA.length;
+
+            renderTranslatorsTable(TRANSLATORS_DATA);
+            renderFinanceTables();
+            renderAgenciesList();
+            renderAuditLog();
+            renderSupportTickets();
+            initCharts();
+            syncTranslatorsWithSupabase();
+        });
+
+        // ESC tuşu ile modalları kapatma
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeChatModal();
+                closeAgencyModal();
+            }
+        });
+    </script>
+</body>
+</html>
