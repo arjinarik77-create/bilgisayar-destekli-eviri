@@ -1275,7 +1275,35 @@
                         <div class="flex flex-col items-end gap-1 shrink-0">
                             <div class="flex items-center gap-2.5 w-full md:w-auto">
                                 <div class="w-48 sm:w-64 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700 shadow-inner relative">
-                                    <div id="subStreamingProgressBar"
+                                    <div 
+        <!-- Vercel & Bulut İçin Inline API Anahtarı İstemi -->
+        <div id="subStreamingApiKeyPromptContainer" class="hidden p-3 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 rounded-xl my-2 text-left">
+            <div class="flex items-center gap-1.5 mb-1.5">
+                <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">key</span>
+                <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Vercel Bulut Transkripsiyonu İçin Gemini API Anahtarı</span>
+            </div>
+            <p class="text-[11px] text-amber-800 dark:text-amber-300 mb-2 leading-relaxed">
+                Vercel üzerinde yerel Python/FFmpeg sunucusu bulunmadığından, video konuşmaları doğrudan <strong>Google Gemini AI</strong> ile ücretsiz ve anlık deşifre edilir.
+            </p>
+            <div class="flex items-center gap-2">
+                <input type="password" id="subStreamingInlineApiKeyInput" placeholder="AIzaSy... (Ücretsiz Gemini API Anahtarınız)" 
+                    class="flex-1 px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-neutral-800 text-xs text-slate-800 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
+                <button type="button" onclick="saveAndResumeVideoTranscription()" 
+                    class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm">
+                    Kaydet & Başlat
+                </button>
+                <button type="button" onclick="cancelStreamingTranscription()" 
+                    class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-neutral-800 dark:text-neutral-300 text-xs rounded-lg cursor-pointer transition-colors">
+                    İptal
+                </button>
+            </div>
+            <div class="mt-2 text-[10px] text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]">help</span>
+                <span>Anahtarınız yoksa <a href="https://aistudio.google.com/apikey" target="_blank" class="underline font-bold text-blue-600 dark:text-blue-400">Google AI Studio</a>'dan 10 saniyede ücretsiz alabilirsiniz.</span>
+            </div>
+        </div>
+
+                            id="subStreamingProgressBar"
                                         class="bg-blue-600 h-2 w-1/4 rounded-full transition-all duration-300">
                                     </div>
                                 </div>
@@ -14552,6 +14580,32 @@ th { background-color: #f1f5f9; color: #334155; font-size: 12px; padding: 10px; 
         let streamingTranscriptionActive = false;
         let streamingTranscriptionCancelled = false;
 
+        function cancelStreamingTranscription() {
+            stopStreamingTranscription();
+        }
+
+        function saveAndResumeVideoTranscription() {
+            const input = document.getElementById('subStreamingInlineApiKeyInput');
+            const key = input ? input.value.trim() : '';
+            if (!key || key.length < 10) {
+                showToast("⚠️ Lütfen geçerli bir Gemini API anahtarı girin.");
+                return;
+            }
+            appState.geminiApiKey = key;
+            localStorage.setItem('cat_gemini_api_key', key);
+            
+            const promptContainer = document.getElementById('subStreamingApiKeyPromptContainer');
+            if (promptContainer) {
+                promptContainer.classList.add('hidden');
+                promptContainer.style.display = 'none';
+            }
+            showToast("✓ API Anahtarı kaydedildi. Transkripsiyon başlatılıyor...");
+            const videoToTranscribe = currentLoadedVideoFile || currentTranscribeVideoFile || (getActiveProject() && getActiveProject().videoFile);
+            if (videoToTranscribe) {
+                startStreamingVideoTranscription(videoToTranscribe);
+            }
+        }
+
         function stopStreamingTranscription() {
             streamingTranscriptionCancelled = true;
             streamingTranscriptionActive = false;
@@ -14600,88 +14654,131 @@ th { background-color: #f1f5f9; color: #334155; font-size: 12px; padding: 10px; 
                 const apiKey = appState.geminiApiKey || localStorage.getItem('cat_gemini_api_key');
                 let preparedSegments = [];
 
-                // 1. ADIM: Sunucu Tabanlı Otomatik FFmpeg Ses Ayıklama & Transkripsiyon Motoru
-                // Videonun sesi saniyeler içinde ayrıştırılıp bağımsız bir WAV dosyası olarak diske kaydedilir
-                try {
-                    if (bar) bar.style.width = '20%';
-                    if (title) title.innerText = 'Videonun Sesi Ayıklanıyor (FFmpeg)...';
-                    if (subtitle) subtitle.innerText = `"${videoFile.name}" ses kanalı bağımsız bir WAV dosyasına dönüştürülüyor...`;
+                // 1. ADIM: Ortam Tespiti ve Sunucu / Bulut Stratejisi
+                // Vercel (https://...) gibi ortamlarda Mixed Content ve Python sunucusu yokluğunu akıllıca yönet
+                const isLocalServer = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-                    const langCode = getVideoSourceSpeechLanguage();
-                    const apiBase = (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) ? 'http://localhost:8000' : '';
-                    const serverRes = await fetch(`${apiBase}/api/extract_and_transcribe`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/octet-stream',
-                            'X-File-Name': videoFile.name,
-                            'X-Gemini-Key': apiKey || '',
-                            'X-Source-Lang': langCode
-                        },
-                        body: videoFile
-                    });
+                // 1.1: YEREL SUNUCU (Eğer localhost/127.0.0.1 ise faster-whisper & FFmpeg dene)
+                if (isLocalServer) {
+                    try {
+                        if (bar) bar.style.width = '20%';
+                        if (title) title.innerText = 'Videonun Sesi Ayıklanıyor (FFmpeg)...';
+                        if (subtitle) subtitle.innerText = `"${videoFile.name}" ses kanalı bağımsız bir WAV dosyasına dönüştürülüyor...`;
 
-                    if (serverRes.ok) {
-                        const data = await serverRes.json();
-                        if (data && data.status === 'success' && data.segments && data.segments.length > 0) {
-                            preparedSegments = data.segments;
-                            if (data.video_id) currentServerVideoId = data.video_id;
-                            showToast(`🎵 Ses "${data.audio_filename}" olarak ayrıştırıldı ve ${data.segments.length} segment zaman damgalarıyla sisteme aktarıldı!`);
+                        const langCode = getVideoSourceSpeechLanguage();
+                        let apiBase = '';
+                        if (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '8000')) {
+                            apiBase = 'http://localhost:8000';
                         }
+                        const serverRes = await fetch(`${apiBase}/api/extract_and_transcribe`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/octet-stream',
+                                'X-File-Name': videoFile.name,
+                                'X-Gemini-Key': apiKey || '',
+                                'X-Source-Lang': langCode
+                            },
+                            body: videoFile
+                        });
+
+                        if (serverRes.ok) {
+                            const data = await serverRes.json();
+                            if (data && data.status === 'success' && data.segments && data.segments.length > 0) {
+                                preparedSegments = data.segments;
+                                if (data.video_id) currentServerVideoId = data.video_id;
+                                showToast(`🎵 Ses "${data.audio_filename}" olarak ayrıştırıldı ve ${data.segments.length} segment zaman damgalarıyla sisteme aktarıldı!`);
+                            }
+                        }
+                    } catch (srvErr) {
+                        console.warn("Yerel sunucu servisi meşgul veya çevrimdışı, bulut/istemci motoruna geçiliyor:", srvErr);
                     }
-                } catch (srvErr) {
-                    console.warn("Sunucu ses servisi meşgul veya çevrimdışı, tarayıcı yerleşik motoruna geçiliyor:", srvErr);
                 }
 
                 if (streamingTranscriptionCancelled) return;
 
-                // 2. ADIM: Yedek İstemci Taraflı Motor (Sunucu Erişilemezse veya Yedek Olarak)
+                // 2. ADIM: VERCEL & BULUT UYUMLU İSTEMCİ YAPAY ZEKÂ MOTORU (Google Gemini Multimodal AI)
+                // Sunucu gerektirmez, FFmpeg gerektirmez; doğrudan video/ses dosyasını alıp milisaniyelik SRT üretir!
                 if (!preparedSegments || preparedSegments.length === 0) {
-                    if (bar) bar.style.width = '35%';
-                    if (title) title.innerText = 'Tarayıcı Ses Kanalı Ayrıştırılıyor';
-                    if (subtitle) subtitle.innerText = 'Yerleşik ses dalgaları taranıyor...';
+                    let activeApiKey = apiKey || appState.geminiApiKey || localStorage.getItem('cat_gemini_api_key') || localStorage.getItem('gemini_api_key') || '';
 
-                    const arrayBuffer = await videoFile.arrayBuffer();
-                    if (streamingTranscriptionCancelled) return;
+                    // Eğer API anahtarı yoksa kullanıcıdan anında anahtar iste (Vercel'de sessizce başarısız olmasını engeller!)
+                    if (!activeApiKey) {
+                        if (bar) bar.style.width = '15%';
+                        if (title) title.innerText = '🔑 Gemini API Anahtarı Gerekli';
+                        if (subtitle) subtitle.innerText = 'Vercel üzerinde altyazı çıkarmak için ücretsiz Google Gemini API anahtarınızı girin:';
 
-                    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-                    let audioBuffer = null;
-                    try {
-                        const audioCtx = new AudioCtxClass();
-                        const audioChunk = arrayBuffer.slice(0, Math.min(arrayBuffer.byteLength, 15 * 1024 * 1024));
-                        const decodePromise = audioCtx.decodeAudioData(audioChunk);
-                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Audio decode timeout')), 2500));
-                        audioBuffer = await Promise.race([decodePromise, timeoutPromise]);
-                    } catch (audioErr) {
-                        console.warn('AudioContext decode uyarısı:', audioErr);
+                        // Inline API Anahtarı İstemi
+                        const promptContainer = document.getElementById('subStreamingApiKeyPromptContainer');
+                        if (promptContainer) {
+                            promptContainer.classList.remove('hidden');
+                            promptContainer.style.display = 'block';
+                        }
+                        return; // Kullanıcı anahtarı girdiğinde saveAndResumeVideoTranscription çalışacak
                     }
 
-                    // A: Gemini AI Doğrudan İstemci Çağrısı
-                    if (apiKey && audioBuffer) {
-                        try {
-                            const wavBlob = audioBufferToWavBlob(audioBuffer, 16000);
-                            const base64Wav = await blobToBase64(wavBlob);
-                            const langCode = getVideoSourceSpeechLanguage();
-                            const langNote = langCode.startsWith('en') ? 'English' : (langCode.startsWith('tr') ? 'Türkçe' : langCode);
+                    if (bar) bar.style.width = '30%';
+                    if (title) title.innerText = 'Medya Yapay Zekâ İçin Hazırlanıyor...';
+                    if (subtitle) subtitle.innerText = `"${videoFile.name}" içeriği taranıyor...`;
 
-                            const prompt = `Sen uzman bir konuşma tanıma ve altyazı çıkarma (ASR / Subtitle) uzmanısın.
-GÖREV: Bu ses kaydını baştan sona dinle ve videoda konuşulan ORİJİNAL kelimeleri BİREBİR (verbatim) olarak ${langNote} dilinde SRT altyazı formatına dök.
+                    let base64Data = '';
+                    let mediaMime = videoFile.type || 'video/mp4';
+
+                    // A: 25MB'a kadar doğrudan video/audio dosyasını base64 kodla
+                    if (videoFile.size <= 25 * 1024 * 1024) {
+                        base64Data = await blobToBase64(videoFile);
+                    } else {
+                        // B: 25MB'dan büyük dosyalar için Web Audio API ile sesi 16kHz WAV'a dönüştür (boyut 10-15 kat küçülür)
+                        if (bar) bar.style.width = '25%';
+                        if (title) title.innerText = 'Ses Kanalı Sıkıştırılıyor...';
+                        try {
+                            const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                            const audioCtx = new AudioCtxClass();
+                            const arrayBuffer = await videoFile.arrayBuffer();
+                            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                            const wavBlob = audioBufferToWavBlob(audioBuffer, 16000);
+                            base64Data = await blobToBase64(wavBlob);
+                            mediaMime = 'audio/wav';
+                        } catch (audioErr) {
+                            console.warn("Büyük dosya ses çıkarma uyarısı, ilk blok aktarılıyor:", audioErr);
+                            const sliceBlob = videoFile.slice(0, 24 * 1024 * 1024, mediaMime);
+                            base64Data = await blobToBase64(sliceBlob);
+                        }
+                    }
+
+                    if (streamingTranscriptionCancelled) return;
+
+                    // C: Gemini 1.5 / 2.0 Flash ile Doğrudan Konuşma Tanıma & SRT Üretimi
+                    const langCode = getVideoSourceSpeechLanguage();
+                    const langNote = langCode.startsWith('en') ? 'English' : (langCode.startsWith('tr') ? 'Türkçe' : langCode);
+
+                    const prompt = `Sen uzman bir konuşma tanıma ve altyazı çıkarma (ASR / Subtitle) uzmanısın.
+GÖREV: Bu ses kaydını veya videoyu baştan sona dinle ve videoda konuşulan ORİJİNAL kelimeleri BİREBİR (verbatim) olarak ${langNote} dilinde standart SRT altyazı formatına dök.
 KESİN KURALLAR:
 1. KESİNLİKLE VE ASLA TERCÜME / ÇEVİRİ YAPMA! Konuşmacı hangi dilde konuşuyorsa o orijinal dilde kelimesi kelimesine yaz.
-2. ZAMANLAMA VE SESSİZLİK KORUMA (ÇOK ÖNEMLİ): Her altyazı bloğunun başlangıç zamanı, konuşmacının sesi tam olarak ne zaman başlıyorsa o saniyede olmalıdır. Örneğin bir konuşma 00:00:12,000'de bitti ve sıradaki konuşma 00:00:17,000'de başlıyorsa; sıradaki altyazının başlangıcını ASLA 00:00:12 yapma! Mutlaka konuşmanın başladığı 00:00:17,000 olarak yaz. Konuşmalar arasındaki sessizlik aralıklarını koru.
+2. ZAMANLAMA VE SESSİZLİK KORUMA (ÇOK ÖNEMLİ): Her altyazı bloğunun başlangıç zamanı, konuşmacının sesi tam olarak ne zaman başlıyorsa o saniyede olmalıdır. Konuşmalar arasındaki sessizlik aralıklarını koru.
 3. SADECE standart SRT formatında bloklar döndür:
    Sıra Numarası
    00:00:00,000 --> 00:00:00,000
    Orijinal konuşma metni
-4. Açıklama veya markdown (\\\`\\\`\\\`srt) ekleme, doğrudan saf SRT çıktısı ver.`;
+4. Açıklama veya markdown (kod bloğu) ekleme, doğrudan saf SRT çıktısı ver.`;
 
-                            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+                    let srtTxt = '';
+
+                    for (const mod of modelsToTry) {
+                        try {
+                            if (bar) bar.style.width = '45%';
+                            if (title) title.innerText = `Yapay Zekâ (${mod}) ile Deşifre Ediliyor...`;
+                            if (subtitle) subtitle.innerText = 'Konuşmalar zaman kodlarıyla altyazıya dökülüyor...';
+
+                            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${activeApiKey}`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     contents: [{
                                         parts: [
                                             { text: prompt },
-                                            { inlineData: { mimeType: 'audio/wav', data: base64Wav } }
+                                            { inlineData: { mimeType: mediaMime, data: base64Data } }
                                         ]
                                     }],
                                     generationConfig: { temperature: 0.1 }
@@ -14691,34 +14788,39 @@ KESİN KURALLAR:
                             if (res.ok) {
                                 const data = await res.json();
                                 let txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                                txt = txt.replace(/```srt/gi, '').replace(/```/g, '').trim();
+                                txt = txt.replace(/```/g, "").replace(/srt/gi, "").trim();
                                 if (txt && txt.includes('-->')) {
-                                    preparedSegments = parseSRT(txt);
+                                    srtTxt = txt;
+                                    break;
                                 }
+                            } else {
+                                const errData = await res.json().catch(() => ({}));
+                                console.warn(`Gemini ${mod} yanıt hatası:`, errData);
                             }
-                        } catch (gemErr) {
-                            console.warn("Client Gemini transkripsiyon hatası:", gemErr);
+                        } catch (modErr) {
+                            console.warn(`Gemini ${mod} bağlantı uyarısı:`, modErr);
                         }
                     }
 
-                    // B: VAD Konuşma Enerjisi Aralıkları (Demo metinler kaldırıldı!)
+                    if (srtTxt) {
+                        preparedSegments = parseSRT(srtTxt);
+                    }
+
+                    // D: Yedek Konuşma Aralıkları (VAD Fallback)
                     if (!preparedSegments || preparedSegments.length === 0) {
                         const playerEl = (document.getElementById('avtVideoPlayer') || document.getElementById('subVideoPlayer'));
                         let totalDur = 60;
-                        if (audioBuffer && Number.isFinite(audioBuffer.duration) && audioBuffer.duration > 0) {
-                            totalDur = audioBuffer.duration;
-                        } else if (playerEl && Number.isFinite(playerEl.duration) && playerEl.duration > 0) {
+                        if (playerEl && Number.isFinite(playerEl.duration) && playerEl.duration > 0) {
                             totalDur = playerEl.duration;
                         } else if (videoFile && videoFile.size) {
                             totalDur = Math.min(600, Math.max(30, Math.round(videoFile.size / 71000)));
                         }
 
-                        const speechIntervals = (audioBuffer && Number.isFinite(audioBuffer.duration)) ? detectSpeechIntervals(audioBuffer) : generateFallbackIntervals(totalDur);
-
+                        const speechIntervals = generateFallbackIntervals(totalDur);
                         speechIntervals.forEach((interval, idx) => {
                             preparedSegments.push({
                                 id: idx + 1,
-                                source: '',
+                                source: 'Konuşma Bloğu ' + (idx + 1),
                                 target: '',
                                 startTime: formatSecondsToSrtTimestamp(interval.start),
                                 endTime: formatSecondsToSrtTimestamp(interval.end),
