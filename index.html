@@ -1410,6 +1410,12 @@
                                     <span class="material-symbols-outlined text-[14px] text-blue-600 dark:text-blue-400">upload_file</span>
                                     <span>Video Seç</span>
                                 </button>
+                                <button type="button" onclick="startStreamingVideoTranscription(currentLoadedVideoFile || (getActiveProject() && getActiveProject().videoFile))"
+                                    class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-200 text-xs font-medium border border-slate-300 dark:border-neutral-700 transition-colors flex items-center gap-1 cursor-pointer font-sans shadow-2xs"
+                                    title="Videodaki konuşmaları yeniden otomatik transkribe et">
+                                    <span class="material-symbols-outlined text-[14px] text-blue-600 dark:text-blue-400">transcribe</span>
+                                    <span>Transkribe Et</span>
+                                </button>
                                 <div class="relative inline-block text-left" id="subQuickExportDropdownWrap">
                                     <button type="button" onclick="const m=document.getElementById('subQuickExportMenu'); if(m) m.classList.toggle('hidden');"
                                         class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-200 text-xs font-medium border border-slate-300 dark:border-neutral-700 transition-colors flex items-center gap-1 cursor-pointer font-sans shadow-2xs"
@@ -6207,7 +6213,10 @@ Yüzünde tatlı bir tebessümle yarınki sunum için hazırlıklarını tamamla
                 }
 
                 // 3. Yerel Disk Dosyasına (/api/save_workspace_state) Kaydet (Backend Varsa)
-                const apiBase = (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) ? 'http://localhost:8000' : '';
+                let apiBase = '';
+                    if (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '8000')) {
+                        apiBase = 'http://localhost:8000';
+                    }
                 try {
                     const res = await fetch(`${apiBase}/api/save_workspace_state`, {
                         method: 'POST',
@@ -14736,7 +14745,11 @@ KESİN KURALLAR:
 
                     const item = preparedSegments[i];
                     item.id = i + 1;
-                    item.target = '';
+                    item.source = item.source || item.sourceText || '';
+                    item.target = item.target || item.targetText || '';
+                    item.startTime = item.startTime || formatSecondsToSrtTimestamp(item.start || 0);
+                    item.endTime = item.endTime || formatSecondsToSrtTimestamp(item.end || (item.start + 2.5));
+                    item.durationSec = item.durationSec || Number(Math.max(0.5, (item.end - item.start) || 2.5).toFixed(2));
                     item.status = 'empty';
 
                     // TM Eşleşmesini kontrol et (arka planda)
@@ -14894,10 +14907,19 @@ KESİN KURALLAR:
             // KRİTİK KORUMA (Kullanıcı Talebi: "Daha önceden başlanan video dosyası projeye tekrar girince kapanıyor ve tekrar videoyu yüklemeye çalışırsak tekrar segmente ediyor.")
             // Eğer projede zaten segmentler varsa, video yüklendiğinde mevcut segmentleri ASLA SİLME ve TEKRAR SEGMENTE ETME!
             if (doc && doc.segments && doc.segments.length > 0) {
-                renderActiveDocument();
-                updateProgressStats();
-                showToast(`🎬 "${file.name}" videoya bağlandı. Mevcut ${doc.segments.length} segment korundu.`);
-                return;
+                const isOnlyPlaceholder = doc.segments.every(s => 
+                    !s.source || 
+                    s.source.includes('[Ses kanalı') || 
+                    s.source.includes('[İlk altyazı') || 
+                    s.source.includes('[Ses dalgası') ||
+                    s.source.trim() === ''
+                );
+                if (!isOnlyPlaceholder) {
+                    renderActiveDocument();
+                    updateProgressStats();
+                    showToast(`🎬 "${file.name}" videoya bağlandı. Mevcut ${doc.segments.length} segment korundu.`);
+                    return;
+                }
             }
 
             // Eğer hiç segment yoksa yeni altyazı belgesi başlat ve transkripsiyonu çalıştır

@@ -293,7 +293,7 @@ def get_whisper_model():
     return _whisper_model
 
 
-def transcribe_and_segment_audio(wav_path):
+def transcribe_and_segment_audio(wav_path, source_lang=None):
     """
     faster-whisper kütüphanesini (WhisperModel("small", device="cpu", compute_type="int8"))
     kullanarak ses dosyasını transkribe eder ve kelime bazlı zaman damgalarını (word_timestamps=True) alır.
@@ -312,13 +312,27 @@ def transcribe_and_segment_audio(wav_path):
                 frame_rate = w.getframerate()
                 raw_data = w.readframes(n_frames)
                 if frame_rate == 16000 and w.getsampwidth() == 2:
-                    audio_input = np.frombuffer(raw_data, dtype=np.int16).astype(np.float32) / 32768.0
+                    audio_np = np.frombuffer(raw_data, dtype=np.int16).astype(np.float32) / 32768.0
+                    n_channels = w.getnchannels()
+                    if n_channels > 1:
+                        audio_np = audio_np.reshape(-1, n_channels).mean(axis=1)
+                    audio_input = audio_np
         except Exception as e_wav:
             print(f"[!] Doğrudan wave okuma uyarısı: {e_wav}, dosya yolundan devam edilecek")
             audio_input = wav_path
 
         # faster-whisper transkripsiyonu: vad_filter=True, word_timestamps=True
-        segments_gen, info = model.transcribe(audio_input, vad_filter=True, word_timestamps=True)
+        lang_param = None
+        if source_lang and isinstance(source_lang, str):
+            clean_l = source_lang.strip().split('-')[0].lower()
+            if clean_l not in ['auto', '']:
+                lang_param = clean_l
+
+        t_kwargs = {"vad_filter": True, "word_timestamps": True}
+        if lang_param:
+            t_kwargs["language"] = lang_param
+
+        segments_gen, info = model.transcribe(audio_input, **t_kwargs)
 
         all_words = []
         for s in segments_gen:
@@ -605,7 +619,7 @@ class BentoCATServerHandler(BaseHTTPRequestHandler):
                 # 2. Öncelik: Yerel faster-whisper Modeli (WhisperModel("small", device="cpu", compute_type="int8"))
                 if not segments:
                     print("[*] Yerel faster-whisper motoru ile gerçek konuşmalar kelime zaman damgalarıyla deşifre ediliyor...")
-                    segments = transcribe_and_segment_audio(extracted_wav_path)
+                    segments = transcribe_and_segment_audio(extracted_wav_path, source_lang)
 
                 response_payload = {
                     "status": "success",
